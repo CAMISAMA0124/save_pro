@@ -1,0 +1,16 @@
+﻿{
+  "name": "jizhang-pro",
+  "version": "1.0.0",
+  "description": "記帳PRO - 個人淨資產追蹤 PWA",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "yahoo-finance2": "^3.13.2"
+  }
+}
