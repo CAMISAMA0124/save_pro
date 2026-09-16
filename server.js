@@ -462,8 +462,9 @@ app.get('/api/health', (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`✅ 記帳PRO Server running on http://localhost:${PORT}`);
-  console.log(`   Stock quotes: Yahoo Finance (+ Fugle fallback for TW stocks)`);
-  console.log(`   Sync Vault: in-memory, 10-min TTL, 6-digit code`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('記帳PRO Server running on port ' + PORT);
+  });
+}
+module.exports = app;
