@@ -329,8 +329,8 @@ PRO.settings = (() => {
       const statusEl     = document.getElementById('sync-status-text');
       if (!progressText) return;
 
-      progressText.textContent = `\${data.current} / \${data.total} (\${pct}%)`;
-      progressBar.style.width  = `\${pct}%`;
+      progressText.textContent = `${data.current} / ${data.total} (${pct}%)`;
+      progressBar.style.width  = `${pct}%`;
 
       if (data.isRunning) {
         statusEl.textContent = '⚙️ 背景同步中...';
