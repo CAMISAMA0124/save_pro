@@ -289,7 +289,9 @@ PRO.settings = (() => {
         PRO.toast('密碼錯誤', 'error');
       }
     });
-    
+    document.getElementById('btn-save-fmp')?.addEventListener('click', () => {
+      const val = document.getElementById('input-fmp-key')?.value?.trim() || '';
+      PRO.state.patch({ settings: { fmpApiKey: val } });
       PRO.toast('FMP API 金鑰已儲存', 'success');
     });
     document.getElementById('btn-gm-sync-top200')?.addEventListener('click', () => {
