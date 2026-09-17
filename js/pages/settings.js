@@ -308,7 +308,7 @@ PRO.settings = (() => {
 
   function _startSync(mode) {
     const key = (PRO.state.get().settings || {}).fmpApiKey;
-    if (!key) return PRO.toast('請先在上方輸入並儲存 FMP API Key', 'error');
+    // if (!key) return PRO.toast('請先在上方輸入並儲存 FMP API Key', 'error');
     fetch('/api/gm/sync-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
