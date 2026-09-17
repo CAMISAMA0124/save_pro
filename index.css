@@ -1,3 +1,69 @@
+
+/* ── Loading Screen ─────────────────────────────────────────────────── */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary, #090912);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+.loading-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loading-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.loading-icon {
+  font-size: 56px;
+  animation: _pulseScale 1.5s ease-in-out infinite;
+}
+.loading-title {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #7c6fff, #30d158);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.loading-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary, #9090b0);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.loading-bar {
+  width: 200px;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.loading-progress {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #7c6fff, #30d158);
+  animation: _loadFill 2.4s ease-out forwards;
+}
+@keyframes _loadFill {
+  from { width: 0 }
+  to   { width: 90% }
+}
+@keyframes _pulseScale {
+  0%, 100% { transform: scale(1) }
+  50%       { transform: scale(1.1) }
+}
+/* ──────────────────────────────────────────────────────────────────── */
 ﻿/* ================================================
    index.css - 記帳PRO 設計系統
    iOS 深色風格 | 2026

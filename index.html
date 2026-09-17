@@ -16,6 +16,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
+  <!-- ── Loading Screen ── -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-logo">
+      <div class="loading-icon">💰</div>
+      <div class="loading-title">YC 記帳PRO</div>
+      <div class="loading-subtitle">載入中</div>
+      <div class="loading-bar">
+        <div class="loading-progress" id="loading-progress"></div>
+      </div>
+    </div>
+  </div>
+
 
 <!-- ════════════════════════════════════════════════════════
      Toast 通知容器
@@ -138,6 +150,27 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+  <script>
+    (function() {
+      function _dismissLoader() {
+        var el = document.getElementById('loading-screen');
+        if (!el) return;
+        var prog = document.getElementById('loading-progress');
+        if (prog) prog.style.width = '100%';
+        setTimeout(function() { el.classList.add('fade-out'); }, 200);
+        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+      }
+      // Dismiss when app is ready or after max 3.5s
+      if (typeof PRO !== 'undefined' && PRO._onReady) {
+        PRO._onReady(_dismissLoader);
+      }
+      window.addEventListener('load', function() {
+        setTimeout(_dismissLoader, 1200);
+      });
+      setTimeout(_dismissLoader, 3500);
+    })();
+  </script>
 </body>
 </html>
 

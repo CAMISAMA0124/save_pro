@@ -301,30 +301,18 @@ function _processSyncQueue() {
 // ==========================================
 // FMP 選股 API (帶快取 24 小時，節省免費額度)
 // ==========================================
-let _fmpConfig = {};
-try {
-  _fmpConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
-} catch(e) {}
+// FMP API Key from environment variable (set in Vercel dashboard)
+const _fmpApiKey = process.env.FMP_API_KEY || 'X99jKH4G0niiGXRyBk4gJsgStJz4iYxy';
 
-const FMP_CACHE_DIR = path.join(__dirname, 'data', 'fmp_cache');
-if (!fs.existsSync(FMP_CACHE_DIR)) fs.mkdirSync(FMP_CACHE_DIR, { recursive: true });
-
+// ── FMP In-Memory Cache (24h TTL, shared across requests in same serverless instance) ──
 function _fmpCacheKey(params) {
-  return require('crypto').createHash('md5').update(JSON.stringify(params)).digest('hex');
+  return JSON.stringify(params).replace(/[^a-z0-9]/gi, '_').substring(0, 80);
 }
-
 function _readFmpCache(key) {
-  const file = path.join(FMP_CACHE_DIR, key + '.json');
-  if (!fs.existsSync(file)) return null;
-  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const age = Date.now() - data.ts;
-  if (age > 24 * 60 * 60 * 1000) return null; // 超過 24 小時失效
-  return data.result;
+  return _cacheGet('fmp_' + key);
 }
-
 function _writeFmpCache(key, result) {
-  const file = path.join(FMP_CACHE_DIR, key + '.json');
-  fs.writeFileSync(file, JSON.stringify({ ts: Date.now(), result }), 'utf8');
+  _cacheSet('fmp_' + key, result, 24 * 60 * 60 * 1000); // 24h TTL
 }
 
 // GET /api/fmp/screen — 出海選股篩選
@@ -344,7 +332,7 @@ app.get('/api/yf/search', async (req, res) => {
 });
 
 app.get('/api/fmp/screen', async (req, res) => {
-  const apiKey = req.query.apikey || _fmpConfig.FMP_API_KEY;
+  const apiKey = req.query.apikey || _fmpApiKey;
   if (!apiKey) return res.status(400).json({ success: false, error: '尚未設定 FMP API Key' });
 
   const params = {
