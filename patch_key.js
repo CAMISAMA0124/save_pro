@@ -1,0 +1,1 @@
+const fs=require('fs'); let c=fs.readFileSync(process.argv[2],'utf8'); c=c.replace("const _fmpApiKey = process.env.FMP_API_KEY || ''","const _fmpApiKey = process.env.FMP_API_KEY || 'X99jKH4G0niiGXRyBk4gJsgStJz4iYxy'"); fs.writeFileSync(process.argv[2],c,{encoding:'utf8'}); console.log('Fallback key embedded');
