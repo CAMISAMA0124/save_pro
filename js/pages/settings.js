@@ -68,10 +68,10 @@ PRO.settings = (() => {
     <div style="padding:14px 0 6px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <div style="font-size:13px;font-weight:600;">Fugle API Key <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(選填)</span></div>
-          <a href="https://developer.fugle.tw/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">👉 免費申請</a>
+          <a href="https://developer.fugle.tw/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;"></span></a>
         </div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">富果提供台股即時報價 API。留空則自動使用 Yahoo Finance 免費數據。</div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:none;">
         <input type="password" id="input-fugle-key" class="form-input" style="flex:1;" placeholder="Bearer xxxxxxxx-xxxx-xxxx..." value="\${s.fugleApiKey || ''}">
         <button class="btn btn-secondary" id="btn-save-fugle" style="white-space:nowrap;flex-shrink:0;">儲存</button>
       </div>
@@ -133,18 +133,18 @@ PRO.settings = (() => {
 
       <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:600;">FMP API Key <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(美股 ETF 成分股資料庫)</span></div>
-          <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">👉 免費申請</a>
+          <div style="font-size:13px;font-weight:600;">ETF 快速同步 (免設定) <span style="display:none;"></div>
+          <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;"></span></a>
         </div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.5;">每日 250 次免費呼叫，支援所有美股/全球主流 ETF 完整成分股查詢。</div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:none;">
           <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="\${s.fmpApiKey || ''}">
           <button class="btn btn-secondary" id="btn-save-fmp" style="white-space:nowrap;flex-shrink:0;">儲存</button>
         </div>
       </div>
 
       <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">📦 ETF 資料庫同步</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;"><span style="display:none;"></span></div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">
           <b>⚡ 快速更新</b>：台/美股前 200 大熱門 ETF，約 10 分鐘完成。<br>
           <b>🌏 深度更新</b>：全市場所有 ETF，<b>自動儲存進度</b>、分多天慢慢跑，明天繼續執行會從斷點接續，無需重來。
