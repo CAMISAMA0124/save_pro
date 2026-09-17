@@ -72,7 +72,7 @@ PRO.settings = (() => {
         </div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">富果提供台股即時報價 API。留空則自動使用 Yahoo Finance 免費數據。</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="password" id="input-fugle-key" class="form-input" style="flex:1;" placeholder="Bearer xxxxxxxx-xxxx-xxxx..." value="${s.fugleApiKey || ''}">
+        <input type="password" id="input-fugle-key" class="form-input" style="flex:1;" placeholder="Bearer xxxxxxxx-xxxx-xxxx..." value="\${s.fugleApiKey || ''}">
         <button class="btn btn-secondary" id="btn-save-fugle" style="white-space:nowrap;flex-shrink:0;">儲存</button>
       </div>
     </div>
@@ -138,7 +138,7 @@ PRO.settings = (() => {
         </div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.5;">每日 250 次免費呼叫，支援所有美股/全球主流 ETF 完整成分股查詢。</div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="${s.fmpApiKey || ''}">
+          <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="\${s.fmpApiKey || ''}">
           <button class="btn btn-secondary" id="btn-save-fmp" style="white-space:nowrap;flex-shrink:0;">儲存</button>
         </div>
       </div>
@@ -334,8 +334,8 @@ PRO.settings = (() => {
       const statusEl     = document.getElementById('sync-status-text');
       if (!progressText) return;
 
-      progressText.textContent = `${data.current} / ${data.total} (${pct}%)`;
-      progressBar.style.width  = `${pct}%`;
+      progressText.textContent = `\${data.current} / \${data.total} (\${pct}%)`;
+      progressBar.style.width  = `\${pct}%`;
 
       if (data.isRunning) {
         statusEl.textContent = '⚙️ 背景同步中...';
