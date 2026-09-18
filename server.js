@@ -255,9 +255,8 @@ app.post('/api/gm/sync-start', (req, res) => {
     return res.json({ success: false, message: '同步已在進行中' });
   }
   
-  const { mode, resumeCurrent, resumeTotal } = req.body || {}; // 'top200' 或 'all'
+  const { mode, resumeCurrent, resumeTotal } = req.body || {};
   
-  // 如果有前端傳來的接續狀態，而且伺服器記憶體已清空，則重建 Queue
   if (resumeCurrent && resumeTotal && syncState.queue.length === 0) {
      syncState.mode = mode || 'all';
      syncState.total = resumeTotal;
@@ -271,25 +270,6 @@ app.post('/api/gm/sync-start', (req, res) => {
     syncState.current = 0;
     for (let i = 0; i < syncState.total; i++) {
       syncState.queue.push(`ETF_${i}`);
-    }
-  }
-
-  syncState.isRunning = true;
-  _processSyncQueue();
-  
-  res.json({ success: true, message: '開始同步' });
-});
-  }
-  
-  const { mode } = req.body || {}; // 'top200' 或 'all'
-  
-  // 若沒有佇列，表示是全新開始
-  if (syncState.queue.length === 0) {
-    syncState.mode = mode || 'top200';
-    syncState.total = syncState.mode === 'all' ? 3200 : 200; // 模擬：全市場 3200 檔，精選 200 檔
-    syncState.current = 0;
-    for (let i = 0; i < syncState.total; i++) {
-      syncState.queue.push(`ETF_${i}`); // 模擬產生佇列
     }
   }
 
