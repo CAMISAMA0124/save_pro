@@ -169,7 +169,8 @@ PRO.settings = (() => {
           </div>
         </div>
 
-        <div style="text-align:right;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div id="sync-last-update" style="font-size:11px;color:var(--text-tertiary);"></div>
           <button id="btn-gm-sync-reset" style="background:none;border:none;color:var(--accent-red);font-size:12px;padding:4px 0;cursor:pointer;">🔄 重置進度</button>
         </div>
       </div>
@@ -296,11 +297,13 @@ PRO.settings = (() => {
       _startSync('all');
     });
     document.getElementById('btn-gm-sync-reset')?.addEventListener('click', () => {
-      if (!confirm('確定要重置所有同步進度嗎？下次執行將從頭開始。')) return;
       fetch('/api/gm/sync-reset', { method: 'POST' })
         .then(r => r.json())
         .then(res => {
           PRO.toast(res.message, 'info');
+          let s = PRO.state.get().settings || {};
+          s.gmSync = { current: 0, total: 0, mode: 'top200', isRunning: false, lastTime: 0 };
+          PRO.state.patch({ settings: s });
           _pollSyncStatus();
         });
     });
@@ -308,11 +311,19 @@ PRO.settings = (() => {
 
   function _startSync(mode) {
     const key = (PRO.state.get().settings || {}).fmpApiKey;
-    // if (!key) return PRO.toast('請先在上方輸入並儲存 FMP API Key', 'error');
+    let s = PRO.state.get().settings || {};
+    let localData = s.gmSync || {};
+    
+    let resumeCurrent = 0, resumeTotal = 0;
+    if (mode === 'all' && localData.mode === 'all' && localData.current > 0 && localData.current < localData.total) {
+       resumeCurrent = localData.current;
+       resumeTotal = localData.total;
+    }
+
     fetch('/api/gm/sync-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, fmpKey: key })
+      body: JSON.stringify({ mode, fmpKey: key, resumeCurrent, resumeTotal })
     })
       .then(r => r.json())
       .then(res => {
