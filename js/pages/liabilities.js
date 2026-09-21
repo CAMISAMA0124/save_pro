@@ -85,7 +85,12 @@ PRO.liabilities = (() => {
 </div>`;
       });
 
+    html += '<div style="text-align:center;padding:24px 0;"><button class="btn btn-primary" id="btn-add-liability-bottom" style="padding:14px 40px;border-radius:100px;background:var(--bg-card);border:1px solid rgba(255,255,255,0.1);color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,0.4);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">＋</span> 新增負債</button></div>';
+
     container.innerHTML = html;
+    
+    const btnBottom = container.querySelector('#btn-add-liability-bottom');
+    if (btnBottom) btnBottom.addEventListener('click', openAddSheet);
     
     container.querySelectorAll('.asset-card[data-id]').forEach(card => {
       card.addEventListener('click', () => openDetailSheet(card.dataset.id));
