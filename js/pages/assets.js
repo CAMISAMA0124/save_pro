@@ -535,23 +535,25 @@ PRO.assets = (() => {
     inputSymbol.addEventListener('input', e => {
       let val = e.target.value.trim().toUpperCase();
       
-      // Auto-append .TW for 4-6 digits Taiwan stocks, even if they have suffix (L, R, B)
-      // We do this immediately on input if it matches the pattern and user typed a character
-      if (/^\d{4,6}[A-Z]?$/.test(val)) {
-         val = val + '.TW';
-         e.target.value = val;
-      }
-      
+      // We don't modify the value while typing to prevent cutting off typing (e.g. 0068.TW5L)
       _autoDetectType(val);
 
-      // Debounced fetch for Chinese Name
+      // Debounced formatting and fetching
       clearTimeout(_symbolDebounceTimer);
       if (val) {
          _symbolDebounceTimer = setTimeout(async () => {
+            // After user stops typing for 1000ms, auto-append .TW if it's a Taiwan stock
+            if (/^\d{4,6}[A-Z]?$/.test(val)) {
+               val = val + '.TW';
+               inputSymbol.value = val;
+               _autoDetectType(val); // Update type detection with the final .TW
+            }
+
             const key = (PRO.state.get().settings || {}).fugleApiKey || '';
             inputSymbol.style.opacity = '0.5';
             try {
                const data = await PRO.api.getQuote(val, key);
+               // Only fill if user hasn't typed a name yet
                if (data && data.name && !inputName.value) {
                   inputName.value = data.name;
                }
@@ -559,13 +561,13 @@ PRO.assets = (() => {
                console.warn('[Assets] Failed to auto-fetch name', err);
             }
             inputSymbol.style.opacity = '1';
-         }, 800);
+         }, 1000);
       }
     });
 
     inputSymbol.addEventListener('blur', e => {
       let val = e.target.value.trim().toUpperCase();
-      // Backup check on blur
+      // Final fallback format on blur
       if (/^\d{4,6}[A-Z]?$/.test(val)) {
          val = val + '.TW';
          e.target.value = val;
