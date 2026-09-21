@@ -217,7 +217,7 @@ PRO.assets = (() => {
           </div>
         </div>
         <div style="font-size:36px;font-weight:800;margin-bottom:4px;" class="${hideAmounts ? 'amount-hidden' : ''}">
-          ${PRO.fmt.hide(PRO.fmt.money(summary.totalValue, 'TWD', true))}
+          ${PRO.fmt.hide(PRO.fmt.money(summary.totalValue, 'TWD', false))}
         </div>
         <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
           <div>
@@ -252,7 +252,7 @@ PRO.assets = (() => {
       const catTotal = _calcSummary(g.items).totalValue;
       html += '<div class="list-section-header" style="margin-top:24px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:8px;margin-bottom:12px;">';
       html += '<span class="list-section-label" style="color:' + g.color + ';display:flex;align-items:center;gap:6px;">' + (g.icon ? '<span>' + g.icon + '</span> ' : '') + g.title + '</span>';
-      html += '<span class="list-section-sum">' + PRO.fmt.hide(PRO.fmt.money(catTotal, 'TWD', true)) + '</span></div>';
+      html += '<span class="list-section-sum">' + PRO.fmt.hide(PRO.fmt.money(catTotal, 'TWD', false)) + '</span></div>';
       g.items.forEach(a => { html += _renderAssetCard(a, hideAmounts); });
     });
 
@@ -324,7 +324,7 @@ PRO.assets = (() => {
       '<div><div class="asset-name">' + (asset.name || asset.symbol || '未命名') + '</div>' +
       '<div class="asset-qty">' + qtyDisplay + '</div></div></div>' +
       '<div class="asset-card-right">' +
-      '<div class="asset-value ' + (hideAmounts ? 'amount-hidden' : '') + '">' + PRO.fmt.hide(PRO.fmt.money(value, 'TWD', true)) + '</div>' +
+      '<div class="asset-value ' + (hideAmounts ? 'amount-hidden' : '') + '">' + PRO.fmt.hide(PRO.fmt.money(value, 'TWD', false)) + '</div>' +
       changeHTML + '</div></div>';
   }
 
@@ -689,7 +689,7 @@ PRO.assets = (() => {
 
     let html = '<div class="sheet-title">' + (asset.name || asset.symbol || '資產詳情') + '</div>';
     html += '<div style="text-align:center;margin-bottom:24px;">';
-    html += '<div style="font-size:32px;font-weight:700;">' + PRO.fmt.money(value, 'TWD', true) + '</div>';
+    html += '<div style="font-size:32px;font-weight:700;">' + PRO.fmt.money(value, 'TWD', false) + '</div>';
     html += '<div style="font-size:15px;margin-top:4px;" class="' + (pnl >= 0 ? 'pos' : 'neg') + '">' + pnlStr + '</div></div>';
     html += '<div class="metrics-row" style="grid-template-columns:repeat(3,1fr);">';
     html += '<div class="metric-cell"><div class="metric-label">持有量</div><div class="metric-value">' + qtyDisplay + '</div></div>';
