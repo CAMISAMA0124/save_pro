@@ -851,5 +851,5 @@ PRO.assets = (() => {
     requestAnimationFrame(_drawAssetChart);
   }
 
-  return { init, refresh: _refreshQuotes, _toggleChartMode, _setChartRange };
+  return { init, refresh: _refreshQuotes, _toggleChartMode, _setChartRange, getRates: () => _rates };
 })();

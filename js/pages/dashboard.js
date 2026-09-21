@@ -31,7 +31,23 @@ PRO.dashboard = (() => {
     const liabilities = s.liabilities || [];
     const hide = (s.settings || {}).hideAmounts;
 
-    const totalAssets = assets.reduce((sum, a) => sum + (parseFloat(a.price || a.costPrice || 0) * parseFloat(a.quantity || 1) || 0), 0);
+    // 精確計算總資產（含外幣匯率換算 + 貴金屬單位換算，與資產頁保持一致）
+    const _rates_dash = (typeof PRO !== 'undefined' && PRO.assets && PRO.assets.getRates) ? PRO.assets.getRates() : {};
+    const UNIT_TO_GRAM_DASH = { oz: 31.1035, g: 1, qian: 3.75, tael: 37.5 };
+    const totalAssets = assets.reduce((sum, a) => {
+      const qty   = parseFloat(a.quantity)  || 0;
+      const price = parseFloat(a.price || a.costPrice) || 0;
+      const rate  = a.currency === 'TWD' ? 1 : (_rates_dash[a.currency] || 1);
+      const isMetal = ['gold','platinum','silver'].includes(a.type);
+      let value;
+      if (isMetal && price > 0) {
+        const unitGram = a.metalUnitToGram || UNIT_TO_GRAM_DASH[a.metalUnit || 'tael'] || 37.5;
+        value = qty * unitGram * price;
+      } else {
+        value = qty * price * rate;
+      }
+      return sum + (value || 0);
+    }, 0);
     const totalLiab = liabilities.reduce((sum, l) => sum + (parseFloat(l.remaining != null ? l.remaining : l.principal) || 0), 0);
     const currentNW = totalAssets - totalLiab; // Always live - don't rely on snapshot value
     const leverage = (totalLiab > 0 && currentNW > 0) ? (totalLiab / currentNW) : 0;
