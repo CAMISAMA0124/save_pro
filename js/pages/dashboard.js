@@ -32,7 +32,18 @@ PRO.dashboard = (() => {
     const hide = (s.settings || {}).hideAmounts;
 
     // 精確計算總資產（含外幣匯率換算 + 貴金屬單位換算，與資產頁保持一致）
-    const _rates_dash = (typeof PRO !== 'undefined' && PRO.assets && PRO.assets.getRates) ? PRO.assets.getRates() : {};
+    const _rates_dash = (() => {
+      // Try to get rates from assets module (if user visited assets tab), otherwise use cached state rates
+      if (typeof PRO !== 'undefined' && PRO.assets && PRO.assets.getRates) {
+        const r = PRO.assets.getRates();
+        if (r && Object.keys(r).length > 0) return r;
+      }
+      // Fallback to rates stored in state (if any)
+      const stateRates = (s.settings && s.settings._cachedRates) ? s.settings._cachedRates : null;
+      if (stateRates && Object.keys(stateRates).length > 0) return stateRates;
+      // Default fallback rates (approximate)
+      return { USD: 32, JPY: 0.21, EUR: 34, CNY: 4.4, HKD: 4.1, AUD: 20, GBP: 41 };
+    })();
     const UNIT_TO_GRAM_DASH = { oz: 31.1035, g: 1, qian: 3.75, tael: 37.5 };
     const totalAssets = assets.reduce((sum, a) => {
       const qty   = parseFloat(a.quantity)  || 0;
