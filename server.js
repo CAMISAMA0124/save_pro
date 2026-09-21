@@ -432,9 +432,6 @@ app.get('/api/etf/:symbol/holdings', async (req, res) => {
     res.status(500).json({ success: false, error: e.message });
   }
 });
-  }
-  res.json({ success: true, symbol: sym, name: sym + ' ETF', holdings });
-});
 
 app.get('/api/metals', async (req, res) => {
   try {
