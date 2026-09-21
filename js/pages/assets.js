@@ -528,14 +528,51 @@ PRO.assets = (() => {
       }
     }
 
-    document.getElementById('add-symbol').addEventListener('input', e => {
-      _autoDetectType(e.target.value);
+    let _symbolDebounceTimer = null;
+    const inputSymbol = document.getElementById('add-symbol');
+    const inputName = document.getElementById('add-name');
+    
+    inputSymbol.addEventListener('input', e => {
+      let val = e.target.value.trim().toUpperCase();
+      
+      // Auto-append .TW for 4-6 digits Taiwan stocks, even if they have suffix (L, R, B)
+      // We do this immediately on input if it matches the pattern and user typed a character
+      if (/^\d{4,6}[A-Z]?$/.test(val)) {
+         val = val + '.TW';
+         e.target.value = val;
+      }
+      
+      _autoDetectType(val);
+
+      // Debounced fetch for Chinese Name
+      clearTimeout(_symbolDebounceTimer);
+      if (val) {
+         _symbolDebounceTimer = setTimeout(async () => {
+            const key = (PRO.state.get().settings || {}).fugleApiKey || '';
+            inputSymbol.style.opacity = '0.5';
+            try {
+               const data = await PRO.api.getQuote(val, key);
+               if (data && data.name && !inputName.value) {
+                  inputName.value = data.name;
+               }
+            } catch(err) {
+               console.warn('[Assets] Failed to auto-fetch name', err);
+            }
+            inputSymbol.style.opacity = '1';
+         }, 800);
+      }
     });
 
-    document.getElementById('add-symbol').addEventListener('blur', e => {
-      const sym = e.target.value.trim().toUpperCase();
-      if (sym && /^\d{4,6}$/.test(sym)) e.target.value = sym + '.TW';
-      else e.target.value = sym;
+    inputSymbol.addEventListener('blur', e => {
+      let val = e.target.value.trim().toUpperCase();
+      // Backup check on blur
+      if (/^\d{4,6}[A-Z]?$/.test(val)) {
+         val = val + '.TW';
+         e.target.value = val;
+      } else {
+         e.target.value = val;
+      }
+      _autoDetectType(val);
     });
 
     document.getElementById('btn-add-cancel').addEventListener('click', () => PRO.sheet.close());
