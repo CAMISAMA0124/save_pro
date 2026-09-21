@@ -116,5 +116,18 @@ PRO.api = (() => {
     }
   }
 
-  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals };
+    /** 取得 ETF 成分股 */
+  async function getEtfHoldings(symbol) {
+    try {
+      const fmpKey = (PRO.state && PRO.state.get().settings || {}).fmpApiKey || '';
+      const params = new URLSearchParams({ fmpKey });
+      const data = await _fetch(`/api/etf/${encodeURIComponent(symbol)}/holdings?${params}`);
+      return data;
+    } catch (e) {
+      console.warn('Failed to fetch etf holdings', e);
+      return null;
+    }
+  }
+
+  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings };
 })();

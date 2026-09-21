@@ -384,20 +384,54 @@ app.get('/api/fmp/screen', async (req, res) => {
 
 app.get('/api/etf/:symbol/holdings', async (req, res) => {
   const sym = req.params.symbol.toUpperCase();
-  const seed = sym.charCodeAt(0) + (sym.charCodeAt(1) || 0) + (sym.charCodeAt(2) || 0);
-  const holdings = [];
-  const baseStocks = [
-    {id:'2330',n:'台積電'}, {id:'2317',n:'鴻海'}, {id:'2454',n:'聯發科'}, {id:'2382',n:'廣達'},
-    {id:'2308',n:'台達電'}, {id:'2881',n:'富邦金'}, {id:'2882',n:'國泰金'}, {id:'2891',n:'中信金'},
-    {id:'3231',n:'緯創'}, {id:'2357',n:'華碩'}, {id:'2603',n:'長榮'}, {id:'2303',n:'聯電'},
-    {id:'AAPL',n:'Apple'}, {id:'MSFT',n:'Microsoft'}, {id:'NVDA',n:'Nvidia'}, {id:'TSLA',n:'Tesla'}
-  ];
-  let totalW = 100;
-  for (let i = 0; i < 30; i++) {
-    const stock = baseStocks[(seed + i) % baseStocks.length];
-    const w = parseFloat((totalW * 0.12).toFixed(2));
-    totalW -= w;
-    holdings.push({ id: stock.id, name: stock.n, weight: w });
+  const apiKey = req.query.fmpKey || _fmpApiKey;
+  const cacheKey = 'etf_holdings_' + sym;
+  
+  // 1. Check FMP Cache (GM暫存)
+  const cached = _readFmpCache(cacheKey);
+  if (cached) {
+    return res.json({ success: true, fromCache: true, symbol: sym, name: sym + ' ETF', holdings: cached });
+  }
+
+  // 2. Fetch from FMP API
+  try {
+    const response = await fetch(`https://financialmodelingprep.com/api/v3/etf-holder/${sym}?apikey=${apiKey}`);
+    if (!response.ok) throw new Error(`FMP API Error: ${response.statusText}`);
+    const fmpData = await response.json();
+    
+    if (fmpData && Array.isArray(fmpData) && fmpData.length > 0) {
+       const holdings = fmpData.map(h => ({
+          id: h.asset,
+          name: h.name || h.asset,
+          weight: h.weightPercentage
+       }));
+       // 寫入快取
+       _writeFmpCache(cacheKey, holdings);
+       return res.json({ success: true, fromCache: false, symbol: sym, name: sym + ' ETF', holdings });
+    } else {
+       // Fallback to mock data if FMP returns empty (e.g. for Taiwan ETFs not supported by FMP)
+       const seed = sym.charCodeAt(0) + (sym.charCodeAt(1) || 0) + (sym.charCodeAt(2) || 0);
+       const holdings = [];
+       const baseStocks = [
+         {id:'2330',n:'台積電'}, {id:'2317',n:'鴻海'}, {id:'2454',n:'聯發科'}, {id:'2382',n:'廣達'},
+         {id:'2308',n:'台達電'}, {id:'2881',n:'富邦金'}, {id:'2882',n:'國泰金'}, {id:'2891',n:'中信金'},
+         {id:'3231',n:'緯創'}, {id:'2357',n:'華碩'}, {id:'2603',n:'長榮'}, {id:'2303',n:'聯電'},
+         {id:'AAPL',n:'Apple'}, {id:'MSFT',n:'Microsoft'}, {id:'NVDA',n:'Nvidia'}, {id:'TSLA',n:'Tesla'}
+       ];
+       let totalW = 100;
+       for (let i = 0; i < 30; i++) {
+         const stock = baseStocks[(seed + i) % baseStocks.length];
+         const w = parseFloat((totalW * 0.12).toFixed(2));
+         totalW -= w;
+         holdings.push({ id: stock.id, name: stock.n, weight: w });
+       }
+       return res.json({ success: true, fromCache: false, symbol: sym, name: sym + ' ETF (Mock)', holdings, mock: true });
+    }
+  } catch(e) {
+    console.error('[ETF Holdings] Error:', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
   }
   res.json({ success: true, symbol: sym, name: sym + ' ETF', holdings });
 });
