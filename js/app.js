@@ -89,22 +89,220 @@ PRO.sheet = {
 ══════════════════════════════════════════════════ */
 PRO.fmt = {
   /** 千分位格式 */
-  num(n, decimals = 0) {
+  num(n, decimals = 'auto') {
     if (n == null || isNaN(n)) return '--';
+    if (decimals === 'auto') {
+      return Number(n).toLocaleString('zh-TW', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 8
+      });
+    }
     return Number(n).toLocaleString('zh-TW', {
-      minimumFractionDigits: (decimals > 0 && n % 1 !== 0) ? 2 : 0, 
+      minimumFractionDigits: (decimals > 0 && n % 1 !== 0) ? decimals : 0, 
       maximumFractionDigits: decimals > 0 ? decimals : 0,
     });
   },
   /** 貨幣格式 */
-  money(n, currency = 'TWD', compact = false, decimals = 2) {
+  money(n, currency = 'TWD', compact = false, decimals = 'auto') {
     if (n == null || isNaN(n)) return '--';
     const abs = Math.abs(n);
     const sign = n < 0 ? '-' : '';
-    const prefix = currency === 'TWD' ? 'NT$' : '$';
+    const prefix = currency === 'TWD' ? 'NT,
+  /** 百分比格式（含正負號） */
+  pct(n, decimals = 2) {
+    if (n == null || isNaN(n)) return '--';
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${Number(n).toFixed(decimals)}%`;
+  },
+  /** 槓桿倍數 */
+  leverage(total, net) {
+    if (!net || net <= 0) return '--';
+    return `${(total / net).toFixed(2)}x`;
+  },
+  /** 隱藏金額（設定開啟時） */
+  hide(str) {
+    const state = PRO.state.get();
+    return state.settings.hideAmounts ? '●●●●' : str;
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   頁面滾動效果（標題列毛玻璃）
+══════════════════════════════════════════════════ */
+function initScrollEffect() {
+  const header = document.getElementById('page-header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+}
+
+/* ══════════════════════════════════════════════════
+   導航列事件綁定
+══════════════════════════════════════════════════ */
+function initNav() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => PRO.navigate(btn.dataset.page));
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   Sheet 點擊背景關閉
+══════════════════════════════════════════════════ */
+function initSheet() {
+  const overlay = document.getElementById('sheet-overlay');
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) PRO.sheet.close();
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   每日自動快照（頁面首次載入時觸發）
+══════════════════════════════════════════════════ */
+async function tryAutoSnapshot() {
+  const state = PRO.state.get();
+  const snaps = state.netWorthSnapshots || [];
+  const today = new Date().toISOString().slice(0, 10);
+  if (snaps.length && snaps[snaps.length-1].date === today) return; // 今天已快照
+
+  // 需要有資產或負債才快照
+  if (!state.assets.length && !state.liabilities.length) return;
+
+  try {
+    let rates = { USD: 32, JPY: 0.21, EUR: 34 };
+    try { rates = await PRO.api.getRates(); } catch {}
+
+    const totalAssets = PRO.state.calcTotalAssets(state.assets, rates);
+    const totalLiabilities = PRO.state.calcTotalLiabilities(state.liabilities, rates);
+    const netWorth = totalAssets - totalLiabilities;
+    const leverage = totalAssets > 0 && netWorth > 0 ? totalAssets / netWorth : 1;
+
+    PRO.state.takeSnapshot({ netWorth, totalAssets, totalLiabilities, leverage });
+    console.log('[app] Daily snapshot saved:', today, 'NW:', netWorth);
+  } catch (e) {
+    console.warn('[app] Snapshot failed:', e);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   App 初始化
+══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initNav();
+  initSheet();
+  initScrollEffect();
+
+  // 初始化探索頁（預設頁面）
+  PRO.explore?.init();
+
+  // 非同步自動快照
+  tryAutoSnapshot();
+
+  // 伺服器狀態檢查（靜默，不打擾用戶）
+  PRO.api.checkHealth().then(ok => {
+    if (!ok) console.warn('[app] Server not reachable. Quotes will be unavailable.');
+  });
+
+  console.log('%c記帳PRO 已啟動 ✅', 'color:#34c759;font-size:14px;font-weight:700;');
+}); : ',
+  /** 百分比格式（含正負號） */
+  pct(n, decimals = 2) {
+    if (n == null || isNaN(n)) return '--';
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${Number(n).toFixed(decimals)}%`;
+  },
+  /** 槓桿倍數 */
+  leverage(total, net) {
+    if (!net || net <= 0) return '--';
+    return `${(total / net).toFixed(2)}x`;
+  },
+  /** 隱藏金額（設定開啟時） */
+  hide(str) {
+    const state = PRO.state.get();
+    return state.settings.hideAmounts ? '●●●●' : str;
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   頁面滾動效果（標題列毛玻璃）
+══════════════════════════════════════════════════ */
+function initScrollEffect() {
+  const header = document.getElementById('page-header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+}
+
+/* ══════════════════════════════════════════════════
+   導航列事件綁定
+══════════════════════════════════════════════════ */
+function initNav() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => PRO.navigate(btn.dataset.page));
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   Sheet 點擊背景關閉
+══════════════════════════════════════════════════ */
+function initSheet() {
+  const overlay = document.getElementById('sheet-overlay');
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) PRO.sheet.close();
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   每日自動快照（頁面首次載入時觸發）
+══════════════════════════════════════════════════ */
+async function tryAutoSnapshot() {
+  const state = PRO.state.get();
+  const snaps = state.netWorthSnapshots || [];
+  const today = new Date().toISOString().slice(0, 10);
+  if (snaps.length && snaps[snaps.length-1].date === today) return; // 今天已快照
+
+  // 需要有資產或負債才快照
+  if (!state.assets.length && !state.liabilities.length) return;
+
+  try {
+    let rates = { USD: 32, JPY: 0.21, EUR: 34 };
+    try { rates = await PRO.api.getRates(); } catch {}
+
+    const totalAssets = PRO.state.calcTotalAssets(state.assets, rates);
+    const totalLiabilities = PRO.state.calcTotalLiabilities(state.liabilities, rates);
+    const netWorth = totalAssets - totalLiabilities;
+    const leverage = totalAssets > 0 && netWorth > 0 ? totalAssets / netWorth : 1;
+
+    PRO.state.takeSnapshot({ netWorth, totalAssets, totalLiabilities, leverage });
+    console.log('[app] Daily snapshot saved:', today, 'NW:', netWorth);
+  } catch (e) {
+    console.warn('[app] Snapshot failed:', e);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   App 初始化
+══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initNav();
+  initSheet();
+  initScrollEffect();
+
+  // 初始化探索頁（預設頁面）
+  PRO.explore?.init();
+
+  // 非同步自動快照
+  tryAutoSnapshot();
+
+  // 伺服器狀態檢查（靜默，不打擾用戶）
+  PRO.api.checkHealth().then(ok => {
+    if (!ok) console.warn('[app] Server not reachable. Quotes will be unavailable.');
+  });
+
+  console.log('%c記帳PRO 已啟動 ✅', 'color:#34c759;font-size:14px;font-weight:700;');
+});;
     if (compact && abs >= 1e8) return `${sign}${prefix}${(abs/1e8).toFixed(1)}億`;
     if (compact && abs >= 1e4) return `${sign}${prefix}${(abs/1e4).toFixed(1)}萬`;
-    return `${sign}${prefix}${this.num(abs)}`;
+    return `${sign}${prefix}${this.num(abs, decimals)}`;
   },
   /** 百分比格式（含正負號） */
   pct(n, decimals = 2) {
