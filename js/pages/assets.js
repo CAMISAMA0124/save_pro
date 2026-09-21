@@ -554,8 +554,8 @@ PRO.assets = (() => {
             try {
                const data = await PRO.api.getQuote(val, key);
                // Only fill if user hasn't typed a name yet
-               if (data && data.name && !inputName.value) {
-                  inputName.value = data.name;
+               if (data && data.quote && (data.quote.shortName || data.quote.longName) && !inputName.value) {
+                  inputName.value = data.quote.shortName || data.quote.longName;
                }
             } catch(err) {
                console.warn('[Assets] Failed to auto-fetch name', err);
