@@ -89,7 +89,7 @@ PRO.sheet = {
 ══════════════════════════════════════════════════ */
 PRO.fmt = {
   /** 千分位格式 */
-  num(n, decimals = 'auto') {
+  num(n, decimals = 2) {
     if (n == null || isNaN(n)) return '--';
     if (decimals === 'auto') {
       return Number(n).toLocaleString('zh-TW', {
@@ -98,7 +98,7 @@ PRO.fmt = {
       });
     }
     return Number(n).toLocaleString('zh-TW', {
-      minimumFractionDigits: (decimals > 0 && n % 1 !== 0) ? decimals : 0, 
+      minimumFractionDigits: 0, 
       maximumFractionDigits: decimals > 0 ? decimals : 0,
     });
   },
