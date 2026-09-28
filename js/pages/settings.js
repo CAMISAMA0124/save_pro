@@ -91,6 +91,31 @@ PRO.settings = (() => {
     </div>
   </div>
 
+  
+  <!-- GitHub Gist 雲端備份 -->
+  <div class="settings-section-title">☁️ GitHub Gist 雲端備份</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
+      用 GitHub Personal Access Token 免費備份至私人 Gist，可跨裝置還原。
+      <a href="https://github.com/settings/tokens/new?scopes=gist&description=SavePro%20Backup" 
+         target="_blank" 
+         style="color:var(--accent);text-decoration:underline;">點此產生 Token（只需 gist 權限）</a>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label class="form-label">GitHub Token</label>
+      <input type="password" id="input-gist-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxx" value="${s.githubGistToken || ''}" />
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">Gist ID <span style="font-size:11px;color:var(--text-tertiary);">(首次備份後自動填入)</span></label>
+      <input type="text" id="input-gist-id" class="form-input" placeholder="留空則自動建立新 Gist" value="${s.githubGistId || ''}" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn btn-primary" id="btn-gist-backup">☁️ 備份到 Gist</button>
+      <button class="btn btn-secondary" id="btn-gist-restore">📥 從 Gist 還原</button>
+    </div>
+    <div id="gist-status" style="margin-top:10px;font-size:12px;color:var(--text-secondary);display:none;"></div>
+  </div>
+
   <!-- 資料管理 -->
   <div class="settings-section-title">資料管理</div>
   <div class="card" style="margin-bottom:16px;">
@@ -275,6 +300,67 @@ PRO.settings = (() => {
         });
       }, 100);
     });
+
+  // GitHub Gist backup
+  document.getElementById('btn-gist-backup')?.addEventListener('click', async () => {
+    const token = document.getElementById('input-gist-token')?.value?.trim();
+    const gistId = document.getElementById('input-gist-id')?.value?.trim();
+    const statusEl = document.getElementById('gist-status');
+    if (!token) { PRO.toast('請先輸入 GitHub Token', 'error'); return; }
+
+    statusEl.style.display = 'block';
+    statusEl.textContent = '備份中...';
+
+    // Save token & gistId to state first
+    let settings = PRO.state.get().settings || {};
+    settings.githubGistToken = token;
+    settings.githubGistId = gistId;
+    PRO.state.patch({ settings });
+
+    const result = await PRO.api.gistBackup(token, gistId || null);
+    if (result.ok) {
+      // Save returned gist ID
+      settings = PRO.state.get().settings || {};
+      settings.githubGistId = result.gistId;
+      PRO.state.patch({ settings });
+      document.getElementById('input-gist-id').value = result.gistId;
+      statusEl.innerHTML = `✅ 備份成功！<a href="${result.url}" target="_blank" style="color:var(--accent);margin-left:4px;">查看 Gist</a>`;
+      PRO.toast('✅ 已成功備份到 GitHub Gist！', 'success');
+    } else {
+      statusEl.textContent = '❌ 備份失敗：' + result.error;
+      PRO.toast('備份失敗：' + result.error, 'error');
+    }
+  });
+
+  // GitHub Gist restore
+  document.getElementById('btn-gist-restore')?.addEventListener('click', async () => {
+    const token = document.getElementById('input-gist-token')?.value?.trim();
+    const gistId = document.getElementById('input-gist-id')?.value?.trim();
+    const statusEl = document.getElementById('gist-status');
+    if (!token || !gistId) { PRO.toast('請填入 Token 和 Gist ID', 'error'); return; }
+    if (!confirm('⚠️ 此操作將覆蓋目前所有資料，確定要從 Gist 還原嗎？')) return;
+
+    statusEl.style.display = 'block';
+    statusEl.textContent = '還原中...';
+
+    const result = await PRO.api.gistRestore(token, gistId);
+    if (result.ok) {
+      // Restore state preserving the token/gistId
+      const newState = result.state;
+      if (!newState.settings) newState.settings = {};
+      newState.settings.githubGistToken = token;
+      newState.settings.githubGistId = gistId;
+      PRO.state.replace(newState);
+      statusEl.textContent = '✅ 還原成功，重新整理中...';
+      PRO.toast('✅ 資料已從 Gist 還原！', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      statusEl.textContent = '❌ 還原失敗：' + result.error;
+      PRO.toast('還原失敗：' + result.error, 'error');
+    }
+  });
+
+
 
     // ---- GM 開發者模式 ----
     document.getElementById('btn-unlock-gm')?.addEventListener('click', () => {
