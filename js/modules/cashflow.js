@@ -44,6 +44,11 @@ PRO.cashflow = (() => {
   function _renderSheet(ym) {
     const state = PRO.state.get();
     const cf = state.cashflow;
+    // 確保 cf.records 存在，避免舊資料升級時引發 Cannot read properties of undefined
+    if (!cf.records) {
+      cf.records = {};
+      PRO.state.patch({ cashflow: cf });
+    }
     const record = cf.records[ym] || { income: {}, expense: {} };
 
     let totalIncome = 0;
