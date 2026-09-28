@@ -648,7 +648,7 @@ ${_buildClecCard(s)}
     }
   }
 
-  function _openRetirementSheet() {
+  function _openRetirementSheet() { console.log('_openRetirementSheet clicked!');
     const s = PRO.state.get();
     const current = s.retirementGoal?.targetAmount || 0;
     const html = `
@@ -668,14 +668,13 @@ ${_buildClecCard(s)}
   function _saveRetirement() {
     const val = parseFloat(document.getElementById('retirement-input').value) || 0;
     try {
-      const raw = localStorage.getItem('jizhangpro_v1');
-      const state = raw ? JSON.parse(raw) : {};
-      state.retirementGoal = { targetAmount: val };
-      localStorage.setItem('jizhangpro_v1', JSON.stringify(state));
+      PRO.state.patch({ retirementGoal: { targetAmount: val } });
       PRO.sheet.close();
       _render();
       PRO.toast('✅ 目標已設定！');
-    } catch(e) {}
+    } catch(e) {
+      console.error(e);
+    }
   }
 
   function _openHistorySheet() {

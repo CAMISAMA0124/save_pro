@@ -834,3 +834,4 @@ select option { background-color: #1c1c1e; color: #ffffff; }
   transform: translateX(0);
   pointer-events: all;
 }
+.tappable { cursor: pointer; }
