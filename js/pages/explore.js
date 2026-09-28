@@ -174,7 +174,11 @@ PRO.explore = (() => {
   </div>
 </div>`;
 
-    // 4. CLEC 投資策略卡片
+    
+    // 歷年績效投資總覽
+    html += _menuCard('📈', 'rgba(10,132,255,0.15)', '歷年績效投資總覽', '', '自動讀取資產與金流，結算真實獲利', 'if(PRO.annualPerf) PRO.annualPerf.open()');
+
+// 4. CLEC 投資策略卡片
     html += _menuCard('📊', 'rgba(255,69,58,0.15)', 'CLEC 投資策略', '', '點擊開始設定', 'if(PRO.rebalance) PRO.rebalance.openRebalanceSheet()');
 
     // 5. 期貨計算機卡片
