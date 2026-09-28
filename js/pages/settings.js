@@ -48,17 +48,17 @@ PRO.settings = (() => {
   <div class="card" style="margin-bottom:16px;">
     <div style="display:flex;align-items:center;padding:12px 0;gap:12px;">
       <div style="flex:1;"><div style="font-size:15px;font-weight:500;">隱藏金額</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">在首頁以 ●●●●● 代替</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="toggle-hide-amounts" \${s.hideAmounts ? 'checked' : ''}><span class="toggle-track"></span></label>
+      <label class="toggle-switch"><input type="checkbox" id="toggle-hide-amounts" ${s.hideAmounts ? 'checked' : ''}><span class="toggle-track"></span></label>
     </div>
     <div class="settings-divider"></div>
     <div style="display:flex;align-items:center;padding:12px 0;gap:12px;">
       <div style="flex:1;"><div style="font-size:15px;font-weight:500;">還款提醒</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">提醒還款日</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="toggle-notify-repay" \${s.notifyRepayment ? 'checked' : ''}><span class="toggle-track"></span></label>
+      <label class="toggle-switch"><input type="checkbox" id="toggle-notify-repay" ${s.notifyRepayment ? 'checked' : ''}><span class="toggle-track"></span></label>
     </div>
     <div class="settings-divider"></div>
     <div style="display:flex;align-items:center;padding:12px 0;gap:12px;">
       <div style="flex:1;"><div style="font-size:15px;font-weight:500;">股息預設台幣</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">配息試算預設以台幣儲存</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="toggle-dividend-twd" \${s.dividendDefaultTWD ? 'checked' : ''}><span class="toggle-track"></span></label>
+      <label class="toggle-switch"><input type="checkbox" id="toggle-dividend-twd" ${s.dividendDefaultTWD ? 'checked' : ''}><span class="toggle-track"></span></label>
     </div>
   </div>
 
@@ -188,7 +188,7 @@ document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
       try {
         const res = await PRO.api.syncPush(PRO.state.get());
         resultEl.style.display = 'block';
-        resultEl.innerHTML = `<div style="background:rgba(52,199,89,0.1);border:1px solid var(--brand);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">同步碼（\${Math.ceil(res.expiresIn/60)} 分鐘內有效）</div><div style="font-size:36px;font-weight:800;letter-spacing:8px;color:var(--brand);">\${res.code}</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:6px;">在另一台裝置點「輸入同步碼」</div></div>`;
+        resultEl.innerHTML = `<div style="background:rgba(52,199,89,0.1);border:1px solid var(--brand);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">同步碼（${Math.ceil(res.expiresIn/60)} 分鐘內有效）</div><div style="font-size:36px;font-weight:800;letter-spacing:8px;color:var(--brand);">${res.code}</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:6px;">在另一台裝置點「輸入同步碼」</div></div>`;
       } catch (e) {
         PRO.toast('同步失敗，請確認伺服器正在執行', 'error');
       } finally {
