@@ -387,7 +387,11 @@ app.get('/api/fmp/screen', async (req, res) => {
 });
 
 app.get('/api/etf/:symbol/holdings', async (req, res) => {
-  const sym = req.params.symbol.toUpperCase();
+  let sym = req.params.symbol.toUpperCase();
+  // Yahoo Finance needs .TW suffix for Taiwan stocks
+  if (/^\d+[A-Z]?$/.test(sym)) {
+    sym += '.TW';
+  }
   const cacheKey = sym;
 
   // 1. Check memory cache (24h TTL)
