@@ -161,141 +161,18 @@ PRO.api = (() => {
 
 
   // ── GitHub Gist backup / restore ─────────────────────────────────────────
-  async function gistBackup(token, existingGistId) {
-    const state = PRO.state.get();
-    // Remove sensitive keys if any
-    const payload = JSON.stringify(state, null, 2);
-    const filename = 'savepro_backup.json';
+  
 
-    try {
-      let url, method;
-      if (existingGistId) {
-        url = `https://api.github.com/gists/${existingGistId}`;
-        method = 'PATCH';
-      } else {
-        url = 'https://api.github.com/gists';
-        method = 'POST';
-      }
-      const body = {
-        description: '記帳PRO 雲端備份 ' + new Date().toLocaleString('zh-TW'),
-        public: false,
-        files: { [filename]: { content: payload } }
-      };
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      return { ok: true, gistId: data.id, url: data.html_url };
-    } catch (e) {
-      return { ok: false, error: e.message };
-    }
-  }
-
-  async function gistRestore(token, gistId) {
-    try {
-      const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-        headers: { Authorization: `token ${token}` }
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const file = data.files['savepro_backup.json'];
-      if (!file) throw new Error('找不到備份檔案');
-      const state = JSON.parse(file.content);
-      return { ok: true, state };
-    } catch (e) {
-      return { ok: false, error: e.message };
-    }
-  }
+  
 
 
 
   // ── Global Database (ETF Cache CDN) ──────────────────────────────────────
   const GLOBAL_GIST_ID = 'e61394ee213342b3165861951495295a';
   
-  async function publishGlobalDB(token, existingGistId) {
-    const etfData = {};
-    // Collect all etf caches from localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('pro_etf_cache_')) {
-        const symbol = key.replace('pro_etf_cache_', '');
-        try {
-          const val = JSON.parse(localStorage.getItem(key));
-          etfData[symbol] = val.data; // Just the FMP response data
-        } catch (e) {}
-      }
-    }
+  
 
-    const payload = JSON.stringify({
-      lastUpdated: new Date().toISOString(),
-      etfData
-    }, null, 2);
+  
 
-    try {
-      let url = existingGistId ? `https://api.github.com/gists/${existingGistId}` : 'https://api.github.com/gists';
-      let method = existingGistId ? 'PATCH' : 'POST';
-      const body = {
-        description: '記帳PRO 全域資料庫 (ETF Cache)',
-        public: true,
-        files: { 'savepro_global.json': { content: payload } }
-      };
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      return { ok: true, gistId: data.id, url: data.html_url };
-    } catch (e) {
-      return { ok: false, error: e.message };
-    }
-  }
-
-  async function fetchGlobalDB() {
-    try {
-      const lastFetch = localStorage.getItem('pro_global_db_fetch_time');
-      if (lastFetch && (Date.now() - parseInt(lastFetch)) < 12 * 3600 * 1000) {
-        // Skip if fetched in last 12 hours
-        return;
-      }
-      
-      const res = await fetch(`https://api.github.com/gists/${GLOBAL_GIST_ID}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const file = data.files['savepro_global.json'];
-      if (!file) return;
-      
-      let content = file.content;
-      if (file.truncated && file.raw_url) {
-        // Fetch raw if truncated (large file)
-        const rawRes = await fetch(file.raw_url);
-        content = await rawRes.text();
-      }
-      
-      const db = JSON.parse(content);
-      if (db && db.etfData) {
-        const now = Date.now();
-        for (const [symbol, etfResponse] of Object.entries(db.etfData)) {
-          // Pre-populate localStorage so api.getEtfHoldings hits cache
-          localStorage.setItem(`pro_etf_cache_${symbol}`, JSON.stringify({ ts: now, data: etfResponse }));
-        }
-        localStorage.setItem('pro_global_db_fetch_time', now.toString());
-        console.log('[GlobalDB] Downloaded ETF cache for', Object.keys(db.etfData).length, 'symbols');
-      }
-    } catch (e) {
-      console.warn('[GlobalDB] Fetch failed:', e);
-    }
-  }
-
-  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings, gistBackup, gistRestore, publishGlobalDB, fetchGlobalDB, getHistory };
+  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings, getHistory };
 })();
