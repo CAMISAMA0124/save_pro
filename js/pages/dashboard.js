@@ -965,63 +965,165 @@ ${_buildClecCard(s)}
   }
 
   
-  function _backfillHistory() {
+  
+
+  
+  // ────────────────────────────────────────────────────────────────────────────
+  // 一鍵補齊真實歷史績效
+  // 從 API 抓取每支股票的歷史收盤價，逐日計算組合市值並補入快照
+  // ────────────────────────────────────────────────────────────────────────────
+  async function _backfillHistory() {
     const s = PRO.state.get();
-    const snaps = s.netWorthSnapshots || [];
-    if (snaps.length < 2) {
-      PRO.toast('需要至少兩天的紀錄才能進行插值補齊');
-      return;
+    const assets = (s.assets || []).filter(a =>
+      !['twd_cash','usd_cash','bond','realEstate','insurance','gold','platinum','silver'].includes(a.type)
+    );
+    const cashAssets = (s.assets || []).filter(a =>
+      ['twd_cash','usd_cash','bond','realEstate','insurance','gold','platinum','silver'].includes(a.type)
+    );
+    const liabilities = s.liabilities || [];
+    const fugleKey = (s.settings || {}).fugleApiKey || '';
+
+    if (assets.length === 0) {
+      PRO.toast('沒有可回補的股票資產'); return;
     }
-    
-    // Sort just in case
-    snaps.sort((a, b) => a.date.localeCompare(b.date));
-    
-    // 先做一次今天的快照，確保今天的值是最新的
-    if (PRO.dashboard._takeSnapshot) {
-      PRO.dashboard._takeSnapshot();
-    }
-    
-    const updatedSnaps = PRO.state.get().netWorthSnapshots;
-    updatedSnaps.sort((a, b) => a.date.localeCompare(b.date));
-    
-    let added = 0;
-    for (let i = 0; i < updatedSnaps.length - 1; i++) {
-      const d1 = new Date(updatedSnaps[i].date);
-      const d2 = new Date(updatedSnaps[i+1].date);
-      const diffTime = d2.getTime() - d1.getTime();
-      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
-      
-      if (diffDays > 1) {
-        // 需要補齊
-        const nw1 = updatedSnaps[i].netWorth || 0;
-        const nw2 = updatedSnaps[i+1].netWorth || 0;
-        const a1 = updatedSnaps[i].totalAssets || 0;
-        const a2 = updatedSnaps[i+1].totalAssets || 0;
-        const l1 = updatedSnaps[i].totalLiab || 0;
-        const l2 = updatedSnaps[i+1].totalLiab || 0;
-        
-        for (let j = 1; j < diffDays; j++) {
-          const ratio = j / diffDays;
-          const targetD = new Date(d1.getTime() + j * 24 * 3600 * 1000);
-          const dateStr = targetD.toISOString().split('T')[0];
-          
-          PRO.state.takeSnapshot({
-            netWorth: nw1 + (nw2 - nw1) * ratio,
-            totalAssets: a1 + (a2 - a1) * ratio,
-            totalLiab: l1 + (l2 - l1) * ratio
-          }, dateStr);
-          added++;
-        }
-      }
-    }
-    
-    if (added > 0) {
-      PRO.toast(`已成功補齊 ${added} 天的歷史紀錄！`, 'success');
-      _render();
-    } else {
-      PRO.toast('所有日期已是完整狀態，無需補齊');
-    }
+
+    // 打開設定面板讓使用者選天數
+    const daysOpts = [7, 14, 30, 60, 90];
+    let html = `
+<div class="sheet-title">✨ 真實歷史績效回補</div>
+<div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+  系統將依你持有的每支股票，向 API 查詢歷史收盤價，<br>
+  計算每日投資組合總市值並補入日曆。<br>
+  <strong>API 有速率限制，每支股票間隔 400ms</strong>
+</div>
+<div class="card" style="margin-bottom:16px;padding:12px;">
+  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">補齊天數上限</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    ${daysOpts.map(d => `<button onclick="PRO.dashboard._doBackfill(${d})" style="padding:8px 18px;border-radius:20px;border:none;background:rgba(10,132,255,0.15);color:var(--accent);font-weight:600;cursor:pointer;">${d} 天</button>`).join('')}
+  </div>
+</div>
+<div style="font-size:12px;color:var(--text-tertiary);">
+  偵測到 <strong>${assets.length}</strong> 支股票需要查詢<br>
+  台股走 Fugle API，美股走 Yahoo Finance / FMP API
+</div>
+    `;
+    PRO.sheet.open(html);
   }
 
-  return { init, _openAccountSwitcher, _backfillHistory, _openLayoutSheet, _dragStart, _dragOver, _drop, _toggleLayoutItem, render: _render, _setNwRange, _setGrowthRange, _setLevRange, _toggleGrowthMode, _toggleNwMode, _openRetirementSheet, _saveRetirement, _openHistorySheet, _takeSnapshot };
+  async function _doBackfill(days) {
+    PRO.sheet.close();
+    const s = PRO.state.get();
+    const assets = s.assets || [];
+    const liabilities = s.liabilities || [];
+    const fugleKey = (s.settings || {}).fugleApiKey || '';
+    const UNIT_TO_GRAM = { oz: 31.1035, g: 1, qian: 3.75, tael: 37.5 };
+
+    const today = new Date();
+    const from  = new Date(today.getTime() - days * 864e5).toISOString().split('T')[0];
+    const to    = today.toISOString().split('T')[0];
+
+    // 靜態資產（現金/不動產/貴金屬）用目前價格代替（不會有歷史波動）
+    const staticTypes = ['twd_cash','usd_cash','bond','realEstate','insurance','gold','platinum','silver'];
+    const staticTotal = assets.filter(a => staticTypes.includes(a.type)).reduce((sum, a) => {
+      const qty   = parseFloat(a.quantity) || 0;
+      const price = parseFloat(a.price || a.costPrice) || 0;
+      const isMetal = ['gold','platinum','silver'].includes(a.type);
+      if (isMetal && price > 0) {
+        const ug = a.metalUnitToGram || UNIT_TO_GRAM[a.metalUnit || 'tael'] || 37.5;
+        return sum + qty * ug * price;
+      }
+      return sum + qty * price;
+    }, 0);
+
+    const totalLiab = liabilities.reduce((sum, l) => sum + (parseFloat(l.remaining != null ? l.remaining : l.principal) || 0), 0);
+
+    const stockAssets = assets.filter(a => !staticTypes.includes(a.type));
+    if (stockAssets.length === 0) {
+      PRO.toast('沒有股票資產可回補'); return;
+    }
+
+    PRO.toast(`開始回補 ${days} 天，共 ${stockAssets.length} 支股票...`);
+
+    // For each stock, fetch historical prices
+    const priceMap = {}; // { 'AAPL': { 'YYYY-MM-DD': close, ... }, ... }
+    for (let i = 0; i < stockAssets.length; i++) {
+      const asset = stockAssets[i];
+      const sym   = asset.symbol || '';
+      if (!sym) continue;
+
+      PRO.toast(`(${i+1}/${stockAssets.length}) 查詢 ${sym}...`);
+
+      try {
+        const history = await PRO.api.getHistory(sym, from, to, fugleKey);
+        if (history && history.length > 0) {
+          priceMap[sym] = {};
+          history.forEach(h => { priceMap[sym][h.date] = h.close; });
+        }
+      } catch (e) {
+        console.warn('[backfill] failed:', sym, e);
+      }
+
+      // Rate limit: 400ms between requests
+      if (i < stockAssets.length - 1) {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
+    // Build all dates in range
+    const allDates = [];
+    const cur = new Date(from);
+    while (cur <= today) {
+      const d = cur.toISOString().split('T')[0];
+      // Skip weekends
+      const dow = cur.getDay();
+      if (dow !== 0 && dow !== 6) allDates.push(d);
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // For each date, compute portfolio value
+    // Use latest available price ≤ date for each stock (handle holidays)
+    let snapsAdded = 0;
+    const existingDates = new Set((s.netWorthSnapshots || []).map(s => s.date));
+
+    for (const date of allDates) {
+      let dayTotal = staticTotal;
+
+      for (const asset of stockAssets) {
+        const sym = asset.symbol || '';
+        const qty = parseFloat(asset.quantity) || 0;
+        const histMap = priceMap[sym];
+        if (!histMap) {
+          // No history → use current price
+          const p = parseFloat(asset.price || asset.costPrice) || 0;
+          dayTotal += qty * p;
+          continue;
+        }
+
+        // Find closest price ≤ date
+        let closePrice = null;
+        const dates = Object.keys(histMap).sort();
+        for (let i = dates.length - 1; i >= 0; i--) {
+          if (dates[i] <= date) { closePrice = histMap[dates[i]]; break; }
+        }
+        if (closePrice == null) {
+          // Use current price as fallback
+          closePrice = parseFloat(asset.price || asset.costPrice) || 0;
+        }
+
+        // FX for USD assets
+        const rates = (typeof PRO !== 'undefined' && PRO.assets && PRO.assets.getRates) ? PRO.assets.getRates() : {};
+        const rate = asset.currency === 'TWD' ? 1 : (rates[asset.currency] || 32);
+        dayTotal += qty * closePrice * rate;
+      }
+
+      const netWorth = dayTotal - totalLiab;
+      PRO.state.takeSnapshot({ netWorth, totalAssets: dayTotal, totalLiab }, date);
+      snapsAdded++;
+    }
+
+    PRO.toast(`✅ 已成功補齊 ${snapsAdded} 天的真實歷史資料！`, 'success');
+    _render();
+  }
+
+  return { init, _openAccountSwitcher, _backfillHistory, _doBackfill, _openLayoutSheet, _dragStart, _dragOver, _drop, _toggleLayoutItem, render: _render, _setNwRange, _setGrowthRange, _setLevRange, _toggleGrowthMode, _toggleNwMode, _openRetirementSheet, _saveRetirement, _openHistorySheet, _takeSnapshot };
 })();

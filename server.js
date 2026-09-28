@@ -481,6 +481,72 @@ app.get('/api/metals', async (req, res) => {
   }
 });
 
+
+// ─── Historical prices for backfill ──────────────────────────────────────────
+// GET /api/history/:symbol?from=YYYY-MM-DD&to=YYYY-MM-DD&fugleKey=...
+// Returns: [{ date: 'YYYY-MM-DD', close: number }, ...]
+app.get('/api/history/:symbol', async (req, res) => {
+  const symbol = req.params.symbol;
+  const from   = req.query.from || new Date(Date.now() - 90 * 864e5).toISOString().split('T')[0];
+  const to     = req.query.to   || new Date().toISOString().split('T')[0];
+  const fugleKey = req.query.fugleKey || '';
+
+  try {
+    // ── Taiwan stocks via Fugle historical candles ──
+    if (fugleKey && /\.(TW|TWO)$/i.test(symbol)) {
+      const fugleSym = symbol.replace(/\.(TW|TWO)$/i, '');
+      const url = `https://api.fugle.tw/marketdata/v1.0/stock/historical/candles/${fugleSym}?startDate=${from}&endDate=${to}`;
+      const fugleRes = await fetch(url, {
+        headers: { 'X-API-KEY': fugleKey },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (fugleRes.ok) {
+        const data = await fugleRes.json();
+        if (data && data.candles && data.candles.length > 0) {
+          const result = data.candles.map(c => ({ date: c.date, close: c.close }));
+          result.sort((a, b) => a.date.localeCompare(b.date));
+          return res.json({ ok: true, data: result });
+        }
+      }
+    }
+
+    // ── US stocks and TW fallback via yahoo-finance2 chart ──
+    const chart = await yahooFinance.chart(symbol, {
+      period1: from,
+      period2: to,
+      interval: '1d'
+    });
+    if (chart && chart.quotes && chart.quotes.length > 0) {
+      const result = chart.quotes
+        .filter(q => q.close != null)
+        .map(q => ({
+          date: new Date(q.date).toISOString().split('T')[0],
+          close: q.close
+        }));
+      result.sort((a, b) => a.date.localeCompare(b.date));
+      return res.json({ ok: true, data: result });
+    }
+
+    // ── FMP fallback for US stocks ──
+    const fmpKey = process.env.FMP_API_KEY || 'X99jKH4G0niiGXRyBk4gJsgStJz4iYxy';
+    const fmpUrl = `https://financialmodelingprep.com/api/v3/historical-price-full/${encodeURIComponent(symbol)}?from=${from}&to=${to}&apikey=${fmpKey}`;
+    const fmpRes = await fetch(fmpUrl, { signal: AbortSignal.timeout(8000) });
+    if (fmpRes.ok) {
+      const fmpData = await fmpRes.json();
+      if (fmpData && fmpData.historical && fmpData.historical.length > 0) {
+        const result = fmpData.historical.map(h => ({ date: h.date, close: h.close }));
+        result.sort((a, b) => a.date.localeCompare(b.date));
+        return res.json({ ok: true, data: result });
+      }
+    }
+
+    return res.json({ ok: false, error: 'No historical data found', data: [] });
+  } catch (e) {
+    console.error('[history]', symbol, e.message);
+    return res.json({ ok: false, error: e.message, data: [] });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });

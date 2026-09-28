@@ -55,7 +55,7 @@ PRO.api = (() => {
     } catch (e) {
       // Fallback if /api/rates not implemented
     }
-      return { USD: 32, JPY: 0.21, EUR: 34, CNY: 4.4, HKD: 4.1, AUD: 20, GBP: 41 };
+      return { getHistory, USD: 32, JPY: 0.21, EUR: 34, CNY: 4.4, HKD: 4.1, AUD: 20, GBP: 41 };
   }
 
   /** 批次更新報價（資產頁主要使用） */
@@ -128,6 +128,20 @@ PRO.api = (() => {
       return null;
     }
   }
+
+  async function getHistory(symbol, from, to, fugleKey) {
+    try {
+      const params = new URLSearchParams({ from, to });
+      if (fugleKey) params.append('fugleKey', fugleKey);
+      const r = await fetch(`/api/history/${encodeURIComponent(symbol)}?${params}`);
+      const d = await r.json();
+      return d.ok ? d.data : [];
+    } catch (e) {
+      console.warn('[api.getHistory]', symbol, e);
+      return [];
+    }
+  }
+
 
   return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings };
 })();
