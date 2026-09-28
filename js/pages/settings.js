@@ -210,7 +210,15 @@ PRO.settings = (() => {
     document.getElementById('toggle-dividend-twd')?.addEventListener('change', function () {
       PRO.state.patch({ settings: { dividendDefaultTWD: this.checked } });
     });
-    document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
+    
+    document.getElementById('btn-save-fmp')?.addEventListener('click', () => {
+      const val = document.getElementById('input-fmp-key')?.value?.trim() || '';
+      let s = PRO.state.get().settings || {};
+      s.fmpApiKey = val;
+      PRO.state.patch({ settings: s });
+      PRO.toast('✅ FMP API Key 已儲存', 'success');
+    });
+document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
       const key = document.getElementById('input-fugle-key')?.value?.trim() || '';
       PRO.state.patch({ settings: { fugleApiKey: key } });
       PRO.toast('API Key 已儲存', 'success');
