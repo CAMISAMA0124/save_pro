@@ -95,13 +95,22 @@ PRO.explore = (() => {
     // 計算被動收入
     const pInfo = _calcPassiveIncome(assets);
 
-    // 計算現金流 (從 cashflow.records)
+    // 計算現金流 (年度加總，使用 cashflow 模組)
     let cfIncome = 0, cfExpense = 0;
-    if (s.cashflow && s.cashflow.records) {
-      const ym = new Date().toISOString().slice(0, 7);
-      const mData = s.cashflow.records[ym] || { income: {}, expense: {} };
-      cfIncome = Object.values(mData.income || {}).reduce((a,b)=>a+b, 0);
-      cfExpense = Object.values(mData.expense || {}).reduce((a,b)=>a+b, 0);
+    if (typeof PRO !== 'undefined' && PRO.cashflow && PRO.cashflow.getAnnualSummary) {
+      const ann = PRO.cashflow.getAnnualSummary();
+      cfIncome = ann.income || 0;
+      cfExpense = ann.expense || 0;
+    } else if (s.cashflow && s.cashflow.records) {
+      // Fallback: 手動加總今年所有月份
+      const year = new Date().getFullYear().toString();
+      Object.keys(s.cashflow.records).forEach(ym => {
+        if (ym.startsWith(year)) {
+          const r = s.cashflow.records[ym];
+          Object.values(r.income || {}).forEach(v => cfIncome += v);
+          Object.values(r.expense || {}).forEach(v => cfExpense += v);
+        }
+      });
     }
     const cfSavings = cfIncome - cfExpense;
     const saveRate = cfIncome > 0 ? (cfSavings / cfIncome * 100) : 0;
