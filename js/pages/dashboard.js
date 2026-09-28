@@ -18,6 +18,56 @@ PRO.dashboard = (() => {
     _render();
   }
 
+  
+  // ============================================================
+  // 精確有效槓桿計算
+  // 有效槓桿 = 總市場暴露 / 淨值
+  // 台股正2(符號L結尾) × 2、正3 × 3，美股2x/3x ETF自動辨識
+  // ============================================================
+  function _calcEffectiveLeverage(assets, totalLiab, netWorth, rates) {
+    if (netWorth <= 0) return 0;
+    const UNIT_TO_GRAM = { oz: 31.1035, g: 1, qian: 3.75, tael: 37.5 };
+    // Known US 2x/3x leveraged ETF tickers
+    const US_2X = new Set(['SSO','QLD','DDM','MVV','UWM','SAA','UCC','DIG','RXL','EET','ROM','UYM','UYG','BIB','AGQ','DGP','UGL','SPLX','UPWM']);
+    const US_3X = new Set(['TQQQ','UPRO','SPXL','SOXL','TECL','FNGU','NAIL','LABU','FAS','TNA','DFEN','UDOW','MIDU','WANT','HIBL','DPST','WEBL','CURE','DRN','ERX','URTY']);
+    const US_INV = new Set(['SH','PSQ','DOG','SDS','QID','SPXU','SQQQ','SRTY','SPXS','FAZ','TZA']);
+
+    let totalExposure = 0;
+    assets.forEach(a => {
+      const qty   = parseFloat(a.quantity) || 0;
+      const price = parseFloat(a.price || a.costPrice) || 0;
+      const rate  = a.currency === 'TWD' ? 1 : ((rates && rates[a.currency]) || 1);
+      const isMetal = ['gold','platinum','silver'].includes(a.type);
+      let value;
+      if (isMetal && price > 0) {
+        const unitGram = a.metalUnitToGram || UNIT_TO_GRAM[a.metalUnit || 'tael'] || 37.5;
+        value = qty * unitGram * price;
+      } else {
+        value = qty * price * rate;
+      }
+
+      // 判斷槓桿倍數
+      let lv = a.leverageMultiplier || 1; // 使用者手動設定優先
+      if (!a.leverageMultiplier) {
+        const sym = (a.symbol || '').toUpperCase().replace('.TW','').replace('.TWO','');
+        // 台股正2：代號以L結尾，且是純數字+L (00631L, 00633L等)
+        if (/^\d+L$/.test(sym)) lv = 2;
+        // 台股正3 (若有): 以3L結尾 (不常見但保留)
+        else if (/^\d+3L$/.test(sym)) lv = 3;
+        // 美股2x/3x/反向
+        else if (US_3X.has(sym)) lv = 3;
+        else if (US_2X.has(sym)) lv = 2;
+        else if (US_INV.has(sym)) lv = -1;
+      }
+
+      totalExposure += value * lv;
+    });
+
+    // 借貸本身已被計入 totalAssets (借的錢買了資產)
+    // 借貸讓淨值降低，自然反映在分母，不需再加一次
+    return totalExposure / netWorth;
+  }
+
   function _render() {
     const orderMap = {}; const showMap = {};
     const container = document.getElementById('dashboard-content');
@@ -61,7 +111,7 @@ PRO.dashboard = (() => {
     }, 0);
     const totalLiab = liabilities.reduce((sum, l) => sum + (parseFloat(l.remaining != null ? l.remaining : l.principal) || 0), 0);
     const currentNW = totalAssets - totalLiab; // Always live - don't rely on snapshot value
-    const leverage = (totalLiab > 0 && currentNW > 0) ? (totalLiab / currentNW) : 0;
+    const leverage = _calcEffectiveLeverage(assets, totalLiab, currentNW, _rates_dash);
 
     // YTD calc
     const thisYear = new Date().getFullYear();
