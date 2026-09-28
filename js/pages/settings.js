@@ -92,30 +92,6 @@ PRO.settings = (() => {
   </div>
 
   
-  <!-- GitHub Gist 雲端備份 -->
-  <div class="settings-section-title">☁️ GitHub Gist 雲端備份</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
-      用 GitHub Personal Access Token 免費備份至私人 Gist，可跨裝置還原。
-      <a href="https://github.com/settings/tokens/new?scopes=gist&description=SavePro%20Backup" 
-         target="_blank" 
-         style="color:var(--accent);text-decoration:underline;">點此產生 Token（只需 gist 權限）</a>
-    </div>
-    <div class="form-group" style="margin-bottom:10px;">
-      <label class="form-label">GitHub Token</label>
-      <input type="password" id="input-gist-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxx" value="${s.githubGistToken || ''}" />
-    </div>
-    <div class="form-group" style="margin-bottom:12px;">
-      <label class="form-label">Gist ID <span style="font-size:11px;color:var(--text-tertiary);">(首次備份後自動填入)</span></label>
-      <input type="text" id="input-gist-id" class="form-input" placeholder="留空則自動建立新 Gist" value="${s.githubGistId || ''}" />
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <button class="btn btn-primary" id="btn-gist-backup">☁️ 備份到 Gist</button>
-      <button class="btn btn-secondary" id="btn-gist-restore">📥 從 Gist 還原</button>
-    </div>
-    <div id="gist-status" style="margin-top:10px;font-size:12px;color:var(--text-secondary);display:none;"></div>
-  </div>
-
   <!-- 資料管理 -->
   <div class="settings-section-title">資料管理</div>
   <div class="card" style="margin-bottom:16px;">
