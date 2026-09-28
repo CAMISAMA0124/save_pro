@@ -55,7 +55,7 @@ PRO.api = (() => {
     } catch (e) {
       // Fallback if /api/rates not implemented
     }
-      return { publishGlobalDB, fetchGlobalDB, getHistory, gistBackup, gistRestore, USD: 32, JPY: 0.21, EUR: 34, CNY: 4.4, HKD: 4.1, AUD: 20, GBP: 41 };
+      return { USD: 32, JPY: 0.21, EUR: 34, CNY: 4.4, HKD: 4.1, AUD: 20, GBP: 41 };
   }
 
   /** 批次更新報價（資產頁主要使用） */
@@ -297,5 +297,5 @@ PRO.api = (() => {
     }
   }
 
-  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings };
+  return { getRates, batchQuote, getQuote, syncPush, syncPull, checkHealth, getMetals, getEtfHoldings, gistBackup, gistRestore, publishGlobalDB, fetchGlobalDB, getHistory };
 })();

@@ -310,15 +310,19 @@ function _processSyncQueue() {
 // FMP API Key from environment variable (set in Vercel dashboard)
 const _fmpApiKey = process.env.FMP_API_KEY || 'X99jKH4G0niiGXRyBk4gJsgStJz4iYxy';
 
-// ── FMP In-Memory Cache (24h TTL, shared across requests in same serverless instance) ──
+// ── FMP In-Memory Cache (24h TTL) ──
+const _fmpMemCache = new Map();
 function _fmpCacheKey(params) {
   return JSON.stringify(params).replace(/[^a-z0-9]/gi, '_').substring(0, 80);
 }
 function _readFmpCache(key) {
-  return _cacheGet('fmp_' + key);
+  const entry = _fmpMemCache.get('fmp_' + key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > 24 * 60 * 60 * 1000) { _fmpMemCache.delete('fmp_' + key); return null; }
+  return entry.data;
 }
 function _writeFmpCache(key, result) {
-  _cacheSet('fmp_' + key, result, 24 * 60 * 60 * 1000); // 24h TTL
+  _fmpMemCache.set('fmp_' + key, { ts: Date.now(), data: result });
 }
 
 // GET /api/fmp/screen — 出海選股篩選
