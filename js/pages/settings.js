@@ -403,57 +403,137 @@ PRO.settings = (() => {
     });
   }
 
-  function _startSync(mode) {
-    const key = (PRO.state.get().settings || {}).fmpApiKey;
+
+  // ── Client-side ETF Sync ──
+  async function _startSync(mode) {
     let s = PRO.state.get().settings || {};
-    let localData = s.gmSync || {};
-    
-    let resumeCurrent = 0, resumeTotal = 0;
-    if (mode === 'all' && localData.mode === 'all' && localData.current > 0 && localData.current < localData.total) {
-       resumeCurrent = localData.current;
-       resumeTotal = localData.total;
+    const fmpKey = s.fmpApiKey || '';
+    if (!fmpKey) { PRO.toast('請先設定 FMP API Key', 'error'); return; }
+
+    let resumeIndex = 0;
+    if (mode === 'all' && s.gmSync && s.gmSync.mode === 'all' && s.gmSync.current > 0) {
+      resumeIndex = s.gmSync.current; // resume deep scan
+    } else {
+      resumeIndex = 0; // fresh start
     }
 
-    fetch('/api/gm/sync-start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, fmpKey: key, resumeCurrent, resumeTotal })
-    })
-      .then(r => r.json())
-      .then(res => {
-        PRO.toast(res.message, res.success ? 'success' : 'warning');
-        _pollSyncStatus();
-      });
+    s.gmSync = s.gmSync || { current: resumeIndex, total: 0, mode, isRunning: true, lastTime: Date.now() };
+    s.gmSync.isRunning = true;
+    s.gmSync.mode = mode;
+    PRO.state.patch({ settings: s });
+    _pollSyncStatus();
+
+    try {
+      // Get all ETF symbols
+      // We will try to fetch from FMP list, or fallback to standard list
+      let list = [];
+      try {
+         const listRes = await fetch(`https://financialmodelingprep.com/api/v3/etf/list?apikey=${fmpKey}`);
+         if (listRes.ok) list = await listRes.json();
+      } catch (e) {}
+      
+      if (!Array.isArray(list) || list.length === 0) {
+         // Fallback small list if api fails
+         list = [{symbol: '0050.TW'}, {symbol: '0056.TW'}, {symbol: 'SPY'}, {symbol: 'QQQ'}, {symbol: 'VOO'}];
+      }
+
+      if (mode === 'top200') {
+         list = list.slice(0, 200);
+      }
+
+      const symbols = list.map(e => e.symbol);
+      let count = 0;
+      let apiHitCount = 0; // Track actual API hits to avoid 250 limit
+      const MAX_DAILY = 250; 
+      
+      s.gmSync.total = symbols.length;
+      PRO.state.patch({ settings: s });
+
+      for (let i = resumeIndex; i < symbols.length; i++) {
+        const sym = symbols[i];
+        if (apiHitCount >= MAX_DAILY) {
+           PRO.toast('API 單日免費額度已達上限 (250)，請明天繼續深掃', 'warning');
+           break;
+        }
+        
+        // Always get freshest state in case user stopped it
+        s = PRO.state.get().settings || {};
+        if (!s.gmSync || !s.gmSync.isRunning) break; 
+        
+        // Skip if already in cache and < 24h old
+        const cacheKey = `pro_etf_cache_${sym}`;
+        const existing = localStorage.getItem(cacheKey);
+        let skip = false;
+        if (existing) {
+          try {
+            const parsed = JSON.parse(existing);
+            // 24 hours
+            if (Date.now() - parsed.ts < 24 * 3600 * 1000) skip = true;
+          } catch(e){}
+        }
+        
+        if (!skip) {
+          await PRO.api.getEtfHoldings(sym);
+          apiHitCount++;
+          // Rate limit to avoid 429
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        count++;
+        s = PRO.state.get().settings || {};
+        if (s.gmSync) {
+           s.gmSync.current = i + 1;
+           PRO.state.patch({ settings: s });
+           _pollSyncStatus();
+        }
+      }
+      
+      s = PRO.state.get().settings || {};
+      if (s.gmSync) s.gmSync.isRunning = false;
+      PRO.state.patch({ settings: s });
+      _pollSyncStatus();
+      
+      if (apiHitCount < MAX_DAILY) {
+        PRO.toast(`同步完成！共掃描 ${count} 支 (實際耗用 ${apiHitCount} 次額度)`, 'success');
+      }
+      
+    } catch (e) {
+      PRO.toast('同步失敗: ' + e.message, 'error');
+      s = PRO.state.get().settings || {};
+      if (s.gmSync) s.gmSync.isRunning = false;
+      PRO.state.patch({ settings: s });
+      _pollSyncStatus();
+    }
   }
 
   function _pollSyncStatus() {
-    fetch('/api/gm/sync-status').then(r => r.json()).then(data => {
-      const pct = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
-      const progressText = document.getElementById('sync-progress-text');
-      const progressBar  = document.getElementById('sync-progress-bar');
-      const statusEl     = document.getElementById('sync-status-text');
-      if (!progressText) return;
+    const s = PRO.state.get().settings || {};
+    const data = s.gmSync || { current: 0, total: 0, isRunning: false };
+    
+    const pct = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
+    const progressText = document.getElementById('sync-progress-text');
+    const progressBar  = document.getElementById('sync-progress-bar');
+    const statusEl     = document.getElementById('sync-status-text');
+    
+    if (!progressText) return;
 
-      progressText.textContent = `${data.current} / ${data.total} (${pct}%)`;
-      progressBar.style.width  = `${pct}%`;
+    progressText.textContent = `${data.current} / ${data.total} (${pct}%)`;
+    progressBar.style.width  = `${pct}%`;
 
-      if (data.isRunning) {
-        statusEl.textContent = '⚙️ 背景同步中...';
-        statusEl.style.color  = 'var(--brand)';
-      } else if (data.current > 0 && data.current < data.total) {
-        statusEl.textContent = '⏸ 已暫停 (API 額度用盡)，明天繼續';
-        statusEl.style.color  = 'var(--accent-yellow)';
-      } else if (data.total > 0 && data.current >= data.total) {
-        statusEl.textContent = '✅ 同步完成！';
-        statusEl.style.color  = 'var(--brand)';
-        if (_syncTimer) { clearInterval(_syncTimer); _syncTimer = null; }
-      } else {
-        statusEl.textContent = '📌 閒置中';
-        statusEl.style.color  = 'var(--text-secondary)';
-      }
-    }).catch(() => {});
+    if (data.isRunning) {
+      statusEl.textContent = '⚙️ 執行中...';
+      statusEl.style.color  = 'var(--brand)';
+    } else if (data.current > 0 && data.current < data.total) {
+      statusEl.textContent = '⏸ 已暫停 (斷點紀錄)，明天可繼續';
+      statusEl.style.color  = 'var(--accent-yellow)';
+    } else if (data.current === data.total && data.total > 0) {
+      statusEl.textContent = '✅ 同步完成';
+      statusEl.style.color  = 'var(--brand)';
+    } else {
+      statusEl.textContent = '📌 閒置中';
+      statusEl.style.color  = 'var(--text-secondary)';
+    }
   }
-
   return { init };
 })();
 
