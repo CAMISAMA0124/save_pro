@@ -130,64 +130,12 @@ PRO.settings = (() => {
     </div>
 
     <div id="gm-unlocked-view" style="display:none;padding:12px 0 4px;">
-      <div style="font-weight:700;font-size:15px;color:var(--brand);margin-bottom:16px;">🛠 GM 開發者模式已啟用</div>
-
-<!-- Gist CDN Section -->
-      <div style="background:rgba(10,132,255,0.05);border:1px solid rgba(10,132,255,0.2);padding:14px;border-radius:10px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--accent);">☁️ 發布全域資料庫 (CDN)</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">將本機 ETF 快取發布到 Gist，<b>所有使用者打開 App 時自動同步</b>。</div>
-        <input type="password" id="input-gm-gist-token" class="form-input" placeholder="GitHub Token (ghp_...)" value="${s.githubGistToken || ''}" style="margin-bottom:6px;"/>
-        <input type="text" id="input-gm-gist-id" class="form-input" placeholder="Gist ID" value="${s.githubGistId || ''}" style="margin-bottom:8px;"/>
-        <button class="btn btn-primary" id="btn-gm-publish-db" style="width:100%;">📤 發布 ETF 快取至 Gist</button>
-        <div id="gm-publish-status" style="margin-top:8px;font-size:11px;color:var(--brand);text-align:center;"></div>
-      </div>
-
-      <!-- FMP API Key Section -->
-      <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:600;">FMP API Key <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(美股 ETF 隱藏資料庫)</span></div>
-          <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">取得免費金鑰</a>
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.5;">每日 250 次免費呼叫，支援所有美股/全球主流 ETF 完整成分股查詢。</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="${s.fmpApiKey || ''}">
-          <button class="btn btn-secondary" id="btn-save-fmp" style="white-space:nowrap;flex-shrink:0;">儲存</button>
-        </div>
-      </div>
-
-      <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px;"><span style="display:none;"></span></div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">
-          <b>⚡ 快速更新</b>：台/美股前 200 大熱門 ETF，約 10 分鐘完成。<br>
-          <b>🌏 深度更新</b>：全市場所有 ETF，<b>自動儲存進度</b>、分多天慢慢跑，明天繼續執行會從斷點接續，無需重來。
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-          <button class="btn btn-secondary" id="btn-gm-sync-top200" style="flex-direction:column;line-height:1.4;">
-            ⚡ 快速更新<br><span style="font-size:10px;font-weight:400;opacity:0.7;">前 200 熱門 ETF</span>
-          </button>
-          <button class="btn btn-primary" id="btn-gm-sync-all" style="flex-direction:column;line-height:1.4;">
-            🌏 深度更新<br><span style="font-size:10px;font-weight:400;opacity:0.8;">全市場分批執行</span>
-          </button>
-        </div>
-
-        <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span id="sync-status-text" style="font-size:11px;color:var(--text-secondary);">📌 閒置中</span>
-            <span id="sync-progress-text" style="font-size:11px;font-weight:700;color:var(--text-primary);">0 / 0 (0%)</span>
-          </div>
-          <div style="width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
-            <div id="sync-progress-bar" style="width:0%;height:100%;background:linear-gradient(to right,var(--brand),var(--accent));transition:width 0.5s ease;border-radius:4px;"></div>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div id="sync-last-update" style="font-size:11px;color:var(--text-tertiary);"></div>
-          <button id="btn-gm-sync-reset" style="background:none;border:none;color:var(--accent-red);font-size:12px;padding:4px 0;cursor:pointer;">🔄 重置進度</button>
-        </div>
+    <div id="gm-unlocked-view" style="display:none;padding:12px 0 4px;">
+      <div style="font-weight:700;font-size:15px;color:var(--brand);margin-bottom:12px;">🛠️ GM 開發者模式已啟用</div>
+      <div style="background:rgba(10,132,255,0.05);border:1px solid rgba(10,132,255,0.2);padding:14px;border-radius:10px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
+        ETF 成分股資料現在由 <b>Yahoo Finance</b> 即時提供（免費、無需 API Key）。每次查詢 ETF X-Ray 時自動載入並快取 24 小時。
       </div>
     </div>
-  </div>
 
   <!-- 版本 -->
   <div style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;line-height:1.8;">
@@ -211,13 +159,7 @@ PRO.settings = (() => {
       PRO.state.patch({ settings: { dividendDefaultTWD: this.checked } });
     });
     
-    document.getElementById('btn-save-fmp')?.addEventListener('click', () => {
-      const val = document.getElementById('input-fmp-key')?.value?.trim() || '';
-      let s = PRO.state.get().settings || {};
-      s.fmpApiKey = val;
-      PRO.state.patch({ settings: s });
-      PRO.toast('✅ FMP API Key 已儲存', 'success');
-    });
+
 document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
       const key = document.getElementById('input-fugle-key')?.value?.trim() || '';
       PRO.state.patch({ settings: { fugleApiKey: key } });
@@ -371,179 +313,14 @@ document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
         PRO.toast('密碼錯誤', 'error');
       }
     });
-        document.getElementById('btn-gm-publish-db')?.addEventListener('click', async () => {
-      const token = document.getElementById('input-gm-gist-token')?.value?.trim();
-      const gistId = document.getElementById('input-gm-gist-id')?.value?.trim();
-      const statusEl = document.getElementById('gm-publish-status');
-      if (!token) { PRO.toast('請輸入 Token', 'error'); return; }
-      statusEl.textContent = '發布中...';
-      let settings = PRO.state.get().settings || {};
-      settings.githubGistToken = token;
-      settings.githubGistId = gistId;
-      PRO.state.patch({ settings });
-      const result = await PRO.api.publishGlobalDB(token, gistId || null);
-      if (result.ok) {
-        settings = PRO.state.get().settings || {};
-        settings.githubGistId = result.gistId;
-        PRO.state.patch({ settings });
-        document.getElementById('input-gm-gist-id').value = result.gistId;
-        statusEl.textContent = '✅ 發布成功！';
-        PRO.toast('✅ 全域資料庫已發布！', 'success');
-      } else {
-        statusEl.textContent = '❌ ' + result.error;
-        PRO.toast('發布失敗：' + result.error, 'error');
-      }
-    });
-    document.getElementById('btn-gm-sync-top200')?.addEventListener('click', () => {
-      _startSync('top200');
-    });
-    document.getElementById('btn-gm-sync-all')?.addEventListener('click', () => {
-      _startSync('all');
-    });
-    document.getElementById('btn-gm-sync-reset')?.addEventListener('click', () => {
-      fetch('/api/gm/sync-reset', { method: 'POST' })
-        .then(r => r.json())
-        .then(res => {
-          PRO.toast(res.message, 'info');
-          let s = PRO.state.get().settings || {};
-          s.gmSync = { current: 0, total: 0, mode: 'top200', isRunning: false, lastTime: 0 };
-          PRO.state.patch({ settings: s });
-          _pollSyncStatus();
-        });
-    });
+
+
+
+
   }
 
 
-  // ── Client-side ETF Sync ──
-  async function _startSync(mode) {
-    let s = PRO.state.get().settings || {};
-    const fmpKey = s.fmpApiKey || '';
-    if (!fmpKey) { PRO.toast('請先設定 FMP API Key', 'error'); return; }
-
-    let resumeIndex = 0;
-    if (mode === 'all' && s.gmSync && s.gmSync.mode === 'all' && s.gmSync.current > 0) {
-      resumeIndex = s.gmSync.current; // resume deep scan
-    } else {
-      resumeIndex = 0; // fresh start
-    }
-
-    s.gmSync = s.gmSync || { current: resumeIndex, total: 0, mode, isRunning: true, lastTime: Date.now() };
-    s.gmSync.isRunning = true;
-    s.gmSync.mode = mode;
-    PRO.state.patch({ settings: s });
-    _pollSyncStatus();
-
-    try {
-      // Get all ETF symbols
-      // We will try to fetch from FMP list, or fallback to standard list
-      let list = [];
-      try {
-         const listRes = await fetch(`https://financialmodelingprep.com/api/v3/etf/list?apikey=${fmpKey}`);
-         if (listRes.ok) list = await listRes.json();
-      } catch (e) {}
-      
-      if (!Array.isArray(list) || list.length === 0) {
-         // Fallback small list if api fails
-         list = [{symbol: '0050.TW'}, {symbol: '0056.TW'}, {symbol: 'SPY'}, {symbol: 'QQQ'}, {symbol: 'VOO'}];
-      }
-
-      if (mode === 'top200') {
-         list = list.slice(0, 200);
-      }
-
-      const symbols = list.map(e => e.symbol);
-      let count = 0;
-      let apiHitCount = 0; // Track actual API hits to avoid 250 limit
-      const MAX_DAILY = 250; 
-      
-      s.gmSync.total = symbols.length;
-      PRO.state.patch({ settings: s });
-
-      for (let i = resumeIndex; i < symbols.length; i++) {
-        const sym = symbols[i];
-        if (apiHitCount >= MAX_DAILY) {
-           PRO.toast('API 單日免費額度已達上限 (250)，請明天繼續深掃', 'warning');
-           break;
-        }
-        
-        // Always get freshest state in case user stopped it
-        s = PRO.state.get().settings || {};
-        if (!s.gmSync || !s.gmSync.isRunning) break; 
-        
-        // Skip if already in cache and < 24h old
-        const cacheKey = `pro_etf_cache_${sym}`;
-        const existing = localStorage.getItem(cacheKey);
-        let skip = false;
-        if (existing) {
-          try {
-            const parsed = JSON.parse(existing);
-            // 24 hours
-            if (Date.now() - parsed.ts < 24 * 3600 * 1000) skip = true;
-          } catch(e){}
-        }
-        
-        if (!skip) {
-          await PRO.api.getEtfHoldings(sym);
-          apiHitCount++;
-          // Rate limit to avoid 429
-          await new Promise(r => setTimeout(r, 400));
-        }
-
-        count++;
-        s = PRO.state.get().settings || {};
-        if (s.gmSync) {
-           s.gmSync.current = i + 1;
-           PRO.state.patch({ settings: s });
-           _pollSyncStatus();
-        }
-      }
-      
-      s = PRO.state.get().settings || {};
-      if (s.gmSync) s.gmSync.isRunning = false;
-      PRO.state.patch({ settings: s });
-      _pollSyncStatus();
-      
-      if (apiHitCount < MAX_DAILY) {
-        PRO.toast(`同步完成！共掃描 ${count} 支 (實際耗用 ${apiHitCount} 次額度)`, 'success');
-      }
-      
-    } catch (e) {
-      PRO.toast('同步失敗: ' + e.message, 'error');
-      s = PRO.state.get().settings || {};
-      if (s.gmSync) s.gmSync.isRunning = false;
-      PRO.state.patch({ settings: s });
-      _pollSyncStatus();
-    }
-  }
-
-  function _pollSyncStatus() {
-    const s = PRO.state.get().settings || {};
-    const data = s.gmSync || { current: 0, total: 0, isRunning: false };
-    
-    const pct = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
-    const progressText = document.getElementById('sync-progress-text');
-    const progressBar  = document.getElementById('sync-progress-bar');
-    const statusEl     = document.getElementById('sync-status-text');
-    
-    if (!progressText) return;
-
-    progressText.textContent = `${data.current} / ${data.total} (${pct}%)`;
-    progressBar.style.width  = `${pct}%`;
-
-    if (data.isRunning) {
-      statusEl.textContent = '⚙️ 執行中...';
-      statusEl.style.color  = 'var(--brand)';
-    } else if (data.current > 0 && data.current < data.total) {
-      statusEl.textContent = '⏸ 已暫停 (斷點紀錄)，明天可繼續';
-      statusEl.style.color  = 'var(--accent-yellow)';
-    } else if (data.current === data.total && data.total > 0) {
-      statusEl.textContent = '✅ 同步完成';
-      statusEl.style.color  = 'var(--brand)';
-    } else {
-      statusEl.textContent = '📌 閒置中';
-      statusEl.style.color  = 'var(--text-secondary)';
-    }
-  }
+  // ── Client-side ETF Sync ──
   return { init };
 })();
 
