@@ -196,7 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollEffect();
 
   // 初始化探索頁（預設頁面）
-  PRO.explore?.init();
+  PRO.api.fetchGlobalDB();
+    PRO.explore?.init();
 
   // 非同步自動快照
   tryAutoSnapshot();
