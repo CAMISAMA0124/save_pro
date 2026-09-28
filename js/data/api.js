@@ -216,7 +216,7 @@ PRO.api = (() => {
 
 
   // ── Global Database (ETF Cache CDN) ──────────────────────────────────────
-  const GLOBAL_GIST_ID = 'ad3d9a73a504b832c0469e752c70be5a';
+  const GLOBAL_GIST_ID = 'e61394ee213342b3165861951495295a';
   
   async function publishGlobalDB(token, existingGistId) {
     const etfData = {};
