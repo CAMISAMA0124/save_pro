@@ -132,23 +132,25 @@ PRO.settings = (() => {
     <div id="gm-unlocked-view" style="display:none;padding:12px 0 4px;">
       <div style="font-weight:700;font-size:15px;color:var(--brand);margin-bottom:16px;">🛠 GM 開發者模式已啟用</div>
 
-      <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:600;">ETF 快速同步 (免設定) <span style="display:none;"></div>
-
+<!-- Gist CDN Section -->
       <div style="background:rgba(10,132,255,0.05);border:1px solid rgba(10,132,255,0.2);padding:14px;border-radius:10px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--accent);">&#x2601;&#xFE0F; 發布全域資料庫 (CDN)</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--accent);">☁️ 發布全域資料庫 (CDN)</div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">將本機 ETF 快取發布到 Gist，<b>所有使用者打開 App 時自動同步</b>。</div>
         <input type="password" id="input-gm-gist-token" class="form-input" placeholder="GitHub Token (ghp_...)" value="${s.githubGistToken || ''}" style="margin-bottom:6px;"/>
         <input type="text" id="input-gm-gist-id" class="form-input" placeholder="Gist ID" value="${s.githubGistId || ''}" style="margin-bottom:8px;"/>
-        <button class="btn btn-primary" id="btn-gm-publish-db" style="width:100%;">&#x1F4E4; 發布 ETF 快取至 Gist</button>
+        <button class="btn btn-primary" id="btn-gm-publish-db" style="width:100%;">📤 發布 ETF 快取至 Gist</button>
         <div id="gm-publish-status" style="margin-top:8px;font-size:11px;color:var(--brand);text-align:center;"></div>
       </div>
-          <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;"></span></a>
+
+      <!-- FMP API Key Section -->
+      <div style="background:rgba(255,255,255,0.05);padding:14px;border-radius:10px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:600;">FMP API Key <span style="font-size:10px;color:var(--text-tertiary);font-weight:400;">(美股 ETF 隱藏資料庫)</span></div>
+          <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;">取得免費金鑰</a>
         </div>
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;line-height:1.5;">每日 250 次免費呼叫，支援所有美股/全球主流 ETF 完整成分股查詢。</div>
-        <div style="display:none;">
-          <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="\${s.fmpApiKey || ''}">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="password" id="input-fmp-key" class="form-input" style="flex:1;" placeholder="輸入 FMP API Key..." value="${s.fmpApiKey || ''}">
           <button class="btn btn-secondary" id="btn-save-fmp" style="white-space:nowrap;flex-shrink:0;">儲存</button>
         </div>
       </div>
