@@ -265,6 +265,9 @@ PRO.dashboard = (() => {
   </div>
   
   <div id="cal-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:12px;"></div>
+  <button onclick="PRO.dashboard._backfillHistory()" style="width:100%;margin-top:16px;padding:10px;background:rgba(10,132,255,0.1);color:var(--brand);border:none;border-radius:8px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+    ✨ 一鍵補齊過去績效
+  </button>
 </div>`;
 
     // 退休目標進度卡片
@@ -306,9 +309,6 @@ PRO.dashboard = (() => {
 
 ${_buildClecCard(s)}
   </div>
-  <button class="snapshot-btn" onclick="PRO.dashboard._takeSnapshot()">
-  🌸 紀錄快照
-</button>
 <div style="height:20px;"></div>
 </div>`;
 
@@ -964,5 +964,64 @@ ${_buildClecCard(s)}
     `;
   }
 
-  return { init, _openAccountSwitcher, _openLayoutSheet, _dragStart, _dragOver, _drop, _toggleLayoutItem, render: _render, _setNwRange, _setGrowthRange, _setLevRange, _toggleGrowthMode, _toggleNwMode, _openRetirementSheet, _saveRetirement, _openHistorySheet, _takeSnapshot };
+  
+  function _backfillHistory() {
+    const s = PRO.state.get();
+    const snaps = s.netWorthSnapshots || [];
+    if (snaps.length < 2) {
+      PRO.toast('需要至少兩天的紀錄才能進行插值補齊');
+      return;
+    }
+    
+    // Sort just in case
+    snaps.sort((a, b) => a.date.localeCompare(b.date));
+    
+    // 先做一次今天的快照，確保今天的值是最新的
+    if (PRO.dashboard._takeSnapshot) {
+      PRO.dashboard._takeSnapshot();
+    }
+    
+    const updatedSnaps = PRO.state.get().netWorthSnapshots;
+    updatedSnaps.sort((a, b) => a.date.localeCompare(b.date));
+    
+    let added = 0;
+    for (let i = 0; i < updatedSnaps.length - 1; i++) {
+      const d1 = new Date(updatedSnaps[i].date);
+      const d2 = new Date(updatedSnaps[i+1].date);
+      const diffTime = d2.getTime() - d1.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+      
+      if (diffDays > 1) {
+        // 需要補齊
+        const nw1 = updatedSnaps[i].netWorth || 0;
+        const nw2 = updatedSnaps[i+1].netWorth || 0;
+        const a1 = updatedSnaps[i].totalAssets || 0;
+        const a2 = updatedSnaps[i+1].totalAssets || 0;
+        const l1 = updatedSnaps[i].totalLiab || 0;
+        const l2 = updatedSnaps[i+1].totalLiab || 0;
+        
+        for (let j = 1; j < diffDays; j++) {
+          const ratio = j / diffDays;
+          const targetD = new Date(d1.getTime() + j * 24 * 3600 * 1000);
+          const dateStr = targetD.toISOString().split('T')[0];
+          
+          PRO.state.takeSnapshot({
+            netWorth: nw1 + (nw2 - nw1) * ratio,
+            totalAssets: a1 + (a2 - a1) * ratio,
+            totalLiab: l1 + (l2 - l1) * ratio
+          }, dateStr);
+          added++;
+        }
+      }
+    }
+    
+    if (added > 0) {
+      PRO.toast(`已成功補齊 ${added} 天的歷史紀錄！`, 'success');
+      _render();
+    } else {
+      PRO.toast('所有日期已是完整狀態，無需補齊');
+    }
+  }
+
+  return { init, _openAccountSwitcher, _backfillHistory, _openLayoutSheet, _dragStart, _dragOver, _drop, _toggleLayoutItem, render: _render, _setNwRange, _setGrowthRange, _setLevRange, _toggleGrowthMode, _toggleNwMode, _openRetirementSheet, _saveRetirement, _openHistorySheet, _takeSnapshot };
 })();

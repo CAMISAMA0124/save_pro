@@ -236,11 +236,12 @@ PRO.state = (() => {
   }
 
   /* --- 淨資產快照 --- */
-  function takeSnapshot(totals) {
+  function takeSnapshot(totals, forceDate) {
     const state = get();
-    const today = _toDateStr(new Date());
-    const snapshots = (state.netWorthSnapshots||[]).filter(s => s.date !== today);
-    snapshots.push(Object.assign({ date: today }, totals));
+    const targetDate = forceDate || _toDateStr(new Date());
+    let snapshots = (state.netWorthSnapshots||[]).filter(s => s.date !== targetDate);
+    snapshots.push(Object.assign({ date: targetDate }, totals));
+    snapshots.sort((a, b) => a.date.localeCompare(b.date)); // 確保照日期排序
     patch({ netWorthSnapshots: snapshots.slice(-1825) }); // 最近5年
   }
 
