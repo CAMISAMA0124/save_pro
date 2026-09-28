@@ -118,25 +118,6 @@ PRO.settings = (() => {
     </div>
   </div>
 
-  <!-- GM 開發者專區 -->
-  <div class="settings-section-title">開發者模式</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div id="gm-locked-view" style="display:flex;align-items:center;padding:12px 0;gap:12px;">
-      <div style="flex:1;">
-        <div style="font-size:15px;font-weight:500;">🔒 GM 開發者模式</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">進階 API 串接與 ETF 資料管理</div>
-      </div>
-      <button class="btn btn-secondary" id="btn-unlock-gm" style="flex-shrink:0;">解鎖</button>
-    </div>
-
-    <div id="gm-unlocked-view" style="display:none;padding:12px 0 4px;">
-    <div id="gm-unlocked-view" style="display:none;padding:12px 0 4px;">
-      <div style="font-weight:700;font-size:15px;color:var(--brand);margin-bottom:12px;">🛠️ GM 開發者模式已啟用</div>
-      <div style="background:rgba(10,132,255,0.05);border:1px solid rgba(10,132,255,0.2);padding:14px;border-radius:10px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-        ETF 成分股資料現在由 <b>Yahoo Finance</b> 即時提供（免費、無需 API Key）。每次查詢 ETF X-Ray 時自動載入並快取 24 小時。
-      </div>
-    </div>
-
   <!-- 版本 -->
   <div style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px;line-height:1.8;">
     記帳PRO v1.0<br>資料儲存於 LocalStorage<br>上傳至伺服器僅同步傳輸
@@ -300,24 +281,7 @@ document.getElementById('btn-save-fugle')?.addEventListener('click', () => {
 
 
     // ---- GM 開發者模式 ----
-    document.getElementById('btn-unlock-gm')?.addEventListener('click', () => {
-      const pwd = prompt('🔒 請輸入 GM 解鎖密碼：');
-      if (pwd === '22345678') {
-        document.getElementById('gm-locked-view').style.display = 'none';
-        document.getElementById('gm-unlocked-view').style.display = 'block';
-        PRO.toast('🛠 GM 模式已啟用', 'success');
-        _pollSyncStatus();
-        if (_syncTimer) clearInterval(_syncTimer);
-        _syncTimer = setInterval(_pollSyncStatus, 2000);
-      } else if (pwd !== null) {
-        PRO.toast('密碼錯誤', 'error');
       }
-    });
-
-
-
-
-  }
 
 
   // ── Client-side ETF Sync ──
