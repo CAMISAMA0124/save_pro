@@ -89,7 +89,9 @@ PRO.cashflow = (() => {
       const val = record.income[cat.id] || '';
       html += `
       <div style="display:flex;align-items:center;margin-bottom:8px;">
-        <div style="width:24px;font-size:14px;text-align:center;margin-right:8px;">${cat.icon}</div>
+        <div style="width:60px;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">
+          <span>${cat.icon}</span> <span>${cat.name}</span>
+        </div>
         <div style="flex:1;">
           <input class="form-input cf-income-input" data-id="${cat.id}" type="number" min="0" placeholder="0" value="${val}" style="padding:6px;font-size:14px;" />
         </div>
@@ -105,7 +107,9 @@ PRO.cashflow = (() => {
       const val = record.expense[cat.id] || '';
       html += `
       <div style="display:flex;align-items:center;margin-bottom:8px;">
-        <div style="width:24px;font-size:14px;text-align:center;margin-right:8px;">${cat.icon}</div>
+        <div style="width:60px;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">
+          <span>${cat.icon}</span> <span>${cat.name}</span>
+        </div>
         <div style="flex:1;">
           <input class="form-input cf-expense-input" data-id="${cat.id}" type="number" min="0" placeholder="0" value="${val}" style="padding:6px;font-size:14px;" />
         </div>
